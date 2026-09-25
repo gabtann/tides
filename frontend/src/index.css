@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+/* Token dari StyleDesign.md §2. Nama dipilih supaya tidak bentrok dengan utilitas Tailwind (mis. text-base). */
+@theme {
+  --color-canvas: #15121D;  /* latar utama (base) */
+  --color-surface: #211C2E; /* kartu dan panel */
+  --color-line: #3A3350;    /* border dan pembatas */
+  --color-fg: #EDE6FF;      /* teks utama, 15.3:1 di atas canvas */
+  --color-muted: #9F97B8;   /* teks sekunder, 6.7:1 di atas canvas */
+  --color-link: #47BFFF;    /* link, tombol sekunder, focus ring */
+  --color-brand: #7E14FF;   /* tombol aksi utama, solid tanpa gradasi; teks putih 6.1:1 */
+  --color-high: #CC5C42;
+  --color-medium: #D69A3C;
+  --color-low: #6FA374;
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-canvas);
+  /* Pola titik dekoratif, sekali di level body. Warna line di opacity 70%: titik tetap samar (1.33:1 terhadap
+     canvas) dan teks muted yang kebetulan di atas titik tetap lolos AA (5.0:1; tanpa opacity hanya 4.29:1). */
+  background-image: radial-gradient(color-mix(in srgb, var(--color-line) 70%, transparent) 1px, transparent 1px);
+  background-size: 20px 20px;
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 22px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
+}
