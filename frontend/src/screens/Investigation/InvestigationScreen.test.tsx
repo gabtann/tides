@@ -56,12 +56,19 @@ describe('InvestigationScreen', () => {
     expect(screen.getByText('2.4x')).toBeInTheDocument()
   })
 
+  it('continues to the challenge once the investigation is done', async () => {
+    const { user, controlled } = openInvestigation('/investigate/BBRI')
+    expect(screen.queryByRole('button', { name: 'Challenge signal' })).not.toBeInTheDocument()
+
+    await controlled.resolve('investigate')
+    await user.click(screen.getByRole('button', { name: 'Challenge signal' }))
+    expect(screen.getByRole('heading', { level: 1, name: 'Challenge Signal' })).toBeInTheDocument()
+  })
+
   it('recovers from a failed investigation with Retry', async () => {
     const { user, controlled } = openInvestigation('/investigate/BBRI')
-    await controlled.reject('investigate')
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Investigation failed: the TIDES service could not be reached. Check your connection and try again.',
-    )
+    await controlled.reject('investigate', 'Symbol not found on Sectors')
+    expect(screen.getByRole('alert')).toHaveTextContent('Symbol not found on Sectors')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Retry' }))

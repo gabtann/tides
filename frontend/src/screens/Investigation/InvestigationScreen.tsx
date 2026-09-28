@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { BackLink } from '../../components/BackLink'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
@@ -12,6 +12,7 @@ import type { ContextBlock } from '../../types/investigation'
 export function InvestigationScreen() {
   const ticker = (useParams().ticker ?? '').toUpperCase()
   const { status, result, error, start } = useInvestigation(ticker)
+  const navigate = useNavigate()
 
   // Cold open: layar ini memang tujuannya panggilan investigate, jadi langsung mulai.
   // Ref mencegah panggilan kedua dari effect ganda StrictMode.
@@ -43,6 +44,9 @@ export function InvestigationScreen() {
             <ContextBlockCard block={result.historicalContext} />
             <ContextBlockCard block={result.peerContext} />
             <ContextBlockCard block={result.fundamentalContext} />
+            <Button className="mt-5" onClick={() => navigate(`/challenge/${ticker}`)}>
+              Challenge signal
+            </Button>
           </>
         )}
       </div>

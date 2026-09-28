@@ -1,6 +1,6 @@
 # TIDES — Style & Design System
 
-Diperbarui: palet dan tipografi diganti total mengikuti warna logo (gradient ungu ke biru), menggantikan arah "dossier kertas" versi sebelumnya. Prinsip konten (nada investigatif, tenang, tanpa hype) dari PRD.md tetap berlaku, itu prinsip produk, bukan pilihan visual, jadi tidak ikut berubah.
+Diperbarui: palet dan tipografi diganti total mengikuti warna logo (gradient ungu ke biru), menggantikan arah "dossier kertas" versi sebelumnya. Prinsip konten (nada investigatif, tenang, tanpa hype) dari PRD.md tetap berlaku, itu prinsip produk, bukan pilihan visual. Satu tambahan yang disengaja: hero section boleh memakai tagline positioning dengan syarat di bagian 7.
 
 ## 1. Arah Desain
 
@@ -19,7 +19,7 @@ Token dasar:
 Brand gradient, dipakai sangat terbatas:
 
 - `linear-gradient(135deg, #7E14FF, #47BFFF)`, dari violet ke biru muda, persis dari file logo.
-- Dipakai HANYA sebagai gambar statis: logo/wordmark di header (favicon.svg dan variannya). TIDAK dipakai sebagai latar tombol atau teks mana pun. Alasannya konkret, bukan cuma gaya, teks putih di atas ujung biru gradient (`#47BFFF`) cuma dapat kontras 2.07:1, jauh di bawah syarat AA 4.5:1, jadi tombol dengan latar gradient dan teks putih itu genuinely gagal aksesibilitas di sebagian areanya, bukan cuma soal selera.
+- Dipakai HANYA sebagai gambar statis: logo/wordmark di header (favicon.svg dan variannya) dan wordmark besar di hero section (dibuat SVG dengan `role="img"`, bukan teks HTML dengan `background-clip`). Hero adalah satu-satunya tempat gradient jadi elemen visual utama. TIDAK dipakai sebagai latar tombol atau teks mana pun. Alasannya konkret, bukan cuma gaya, teks putih di atas ujung biru gradient (`#47BFFF`) cuma dapat kontras 2.07:1, jauh di bawah syarat AA 4.5:1, jadi tombol dengan latar gradient dan teks putih itu genuinely gagal aksesibilitas di sebagian areanya, bukan cuma soal selera.
 - Tombol aksi utama (contoh "Scan Watchlist") pakai warna solid `#7E14FF` (ujung gelap gradient), bukan gradient penuh. Teks putih di atasnya dapat kontras 6.12:1, aman.
 - Warna solid `#47BFFF` (ujung biru gradient) dipakai sendirian untuk link, focus ring, dan elemen interaktif sekunder yang tidak perlu warna kuat. Kontras ke base 8.95:1.
 
@@ -85,7 +85,7 @@ Loading state dan error state: pesan spesifik dan actionable, bukan spinner gene
 
 ## 7. Suara dan Konten
 
-Prinsip ini tidak berubah dari versi sebelumnya, karena ini soal produk, bukan tema visual:
+Prinsip ini tidak berubah dari versi sebelumnya, karena ini soal produk, bukan tema visual. Satu-satunya tambahan adalah aturan hero section di akhir bagian ini:
 
 Tombol pakai kata kerja aktif dan spesifik ("Scan Watchlist"), bukan bahasa jualan.
 
@@ -94,6 +94,8 @@ Nama aksi konsisten sepanjang alur (tombol "Investigate" menuju layar "Investiga
 Pesan error menjelaskan apa yang terjadi dan langkah berikutnya, ditulis dalam suara sistem, bukan permintaan maaf generik.
 
 Layar kosong adalah ajakan bertindak, bukan ruang hampa.
+
+Hero section adalah satu-satunya tempat untuk tagline positioning yang bernada brand (saat ini "AI-Powered Intelligence for the Indonesian Stock Market."). Ini disengaja, bukan penyimpangan dari nada tenang. Syaratnya: tagline selalu dipasangkan langsung dengan kalimat prinsip yang menegaskan TIDES investigator, bukan predictor, dan tidak memberi saran keuangan (saat ini "Investigates the data. Doesn't predict prices or give financial advice."). Hero tidak punya tombol, link, atau heading tambahan. Di luar hero, semua teks tetap memakai suara tenang dan tanpa hype seperti aturan di atas.
 
 ## 8. Aksesibilitas dan Responsif
 
