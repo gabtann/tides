@@ -2,14 +2,9 @@ import { watchlistStore } from '../state/watchlist.store.js';
 import { getOverview, getDailyHistory, getPeers } from '../integration/sectors.client.js';
 import { normalizeOverview, normalizeDailyHistory, normalizePeers } from './sectors-normalizer.service.js';
 import { runSignalEngine } from './signal-engine.service.js';
+import { normalizeTicker } from '../utils/ticker.js';
 
 let lastScanResult = null;
-
-function toSectorsSymbol(ticker) {
-  // Symbol di watchlist store disimpan uppercase tanpa .JK (mis. "BBCA")
-  // Sectors path juga pakai tanpa .JK — jadi tidak perlu strip apa pun saat ini.
-  return ticker;
-}
 
 function getDateRange(days = 30) {
   const end = new Date();
@@ -27,22 +22,33 @@ export async function runScan() {
   const { start, end } = getDateRange(30);
 
   for (const { symbol } of watchlist) {
-    const sectorsSymbol = toSectorsSymbol(symbol);
+    // Normalisasi ticker dari watchlist sebelum dipakai ke API maupun ke normalizer.
+    // Watchlist menyimpan ticker tanpa .JK (mis. "BBCA"), normalizeTicker() memastikan
+    // format konsisten meski ada edge case huruf kecil atau sufx dari sumber lain.
+    const ticker = normalizeTicker(symbol);
+
     try {
       const [overviewRaw, historyRaw, peersRaw] = await Promise.all([
-        getOverview(sectorsSymbol),
-        getDailyHistory(sectorsSymbol, start, end),
-        getPeers(sectorsSymbol),
+        getOverview(ticker),
+        getDailyHistory(ticker, start, end),
+        getPeers(ticker),
       ]);
 
       const current = normalizeOverview(overviewRaw);
       const history = normalizeDailyHistory(historyRaw);
-      const peers = normalizePeers(peersRaw);
+      // normalizePeers sekarang butuh parameter kedua (ticker yang di-query)
+      // untuk memfilter self-peer dari hasil.
+      const peers = normalizePeers(peersRaw, ticker);
 
-      const signals = runSignalEngine(symbol, current, history, peers);
+      const signals = runSignalEngine(ticker, current, history, peers);
       allSignals.push(...signals);
     } catch (err) {
-      errors.push({ symbol, message: err.message, code: err.code || 'INTERNAL_ERROR' });
+      const isExternal = (err.code && err.code.startsWith('SECTORS_')) || err.status >= 500;
+      errors.push({
+        symbol: ticker ?? symbol,
+        message: isExternal ? 'An error occurred while communicating with external services' : err.message,
+        code: err.code || 'INTERNAL_ERROR',
+      });
     }
   }
 
