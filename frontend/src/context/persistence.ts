@@ -14,6 +14,7 @@ function isScanResult(value: unknown): value is ScanResult {
     isRecord(value) &&
     typeof value.scannedAt === 'string' &&
     Array.isArray(value.signals) &&
+    (value.errors === undefined || Array.isArray(value.errors)) &&
     value.signals.every(
       (signal) =>
         isRecord(signal) &&

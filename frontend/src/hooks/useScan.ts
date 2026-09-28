@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useAppState } from '../context/stateContext'
+import { errorMessage } from '../utils/errors'
 
 export const SCAN_ERROR_MESSAGE =
   'Scan failed: the TIDES service could not be reached. Check your connection and try again.'
@@ -17,8 +18,8 @@ export function useScan() {
     dispatch({ type: 'SCAN_START' })
     try {
       dispatch({ type: 'SCAN_SUCCESS', result: await api.scanWatchlist() })
-    } catch {
-      dispatch({ type: 'SCAN_ERROR', error: SCAN_ERROR_MESSAGE })
+    } catch (err) {
+      dispatch({ type: 'SCAN_ERROR', error: errorMessage(err, SCAN_ERROR_MESSAGE) })
     }
   }, [canScan, dispatch, api])
 

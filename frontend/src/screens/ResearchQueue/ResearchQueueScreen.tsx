@@ -69,6 +69,19 @@ export function ResearchQueueScreen() {
           </ErrorState>
         )}
 
+        {watchlistReady && result?.errors && result.errors.length > 0 && (
+          <div role="status" className="border-l-2 border-l-medium pl-3 text-[13px] leading-[18px]">
+            <p className="font-semibold">{tickers(result.errors.length)} could not be scanned</p>
+            <ul className="mt-1 text-muted">
+              {result.errors.map((scanError) => (
+                <li key={scanError.ticker}>
+                  <span className="font-semibold tabular-nums">{scanError.ticker}</span>: {scanError.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {watchlistStatus === 'error' ? (
           <ErrorState message={watchlistError ?? WATCHLIST_LOAD_ERROR_MESSAGE}>
             <Button onClick={reload}>Retry</Button>
@@ -97,6 +110,15 @@ export function ResearchQueueScreen() {
                 </ul>
               </section>
             ))
+           ) : items.length === 0 ? (
+            <div>
+              <p className="max-w-[60ch] text-muted">
+                Your watchlist is empty. Add tickers to see which ones need a closer look.
+              </p>
+              <Link to="/" className="mt-3 inline-block rounded text-link hover:underline hover:underline-offset-4">
+                Go to watchlist
+              </Link>
+            </div>
           ) : (
             <p className="text-muted">No significant changes across your watchlist.</p>
           )
