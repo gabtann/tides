@@ -29,4 +29,38 @@ describe('watchlist.service', () => {
     assert.equal(getWatchlist().length, 50);
     assert.throws(() => addToWatchlist('EXTRA'), { code: 'LIMIT_REACHED' });
   });
+
+  // ── removeFromWatchlist — edge cases normalisasi ticker ─────────────────────
+
+  test('removeFromWatchlist berhasil hapus simbol dengan suffix .JK uppercase', () => {
+    addToWatchlist('BBCA');
+    // DELETE /watchlist/BBCA.JK seharusnya menghapus BBCA (bug D.5)
+    const removed = removeFromWatchlist('BBCA.JK');
+    assert.equal(removed, 'BBCA');
+    assert.equal(getWatchlist().find((i) => i.symbol === 'BBCA'), undefined);
+  });
+
+  test('removeFromWatchlist berhasil hapus simbol dengan suffix .jk lowercase', () => {
+    addToWatchlist('BBRI');
+    const removed = removeFromWatchlist('bbri.jk');
+    assert.equal(removed, 'BBRI');
+    assert.equal(getWatchlist().find((i) => i.symbol === 'BBRI'), undefined);
+  });
+
+  test('removeFromWatchlist berhasil hapus simbol lowercase tanpa suffix', () => {
+    addToWatchlist('TLKM');
+    const removed = removeFromWatchlist('tlkm');
+    assert.equal(removed, 'TLKM');
+    assert.equal(getWatchlist().find((i) => i.symbol === 'TLKM'), undefined);
+  });
+
+  test('removeFromWatchlist lempar NOT_FOUND untuk simbol yang tidak ada di store', () => {
+    // Pastikan store kosong dari simbol ini
+    assert.throws(() => removeFromWatchlist('ZZZZZ'), { code: 'NOT_FOUND' });
+  });
+
+  test('removeFromWatchlist lempar VALIDATION_ERROR untuk input non-string', () => {
+    assert.throws(() => removeFromWatchlist(null), { code: 'VALIDATION_ERROR' });
+    assert.throws(() => removeFromWatchlist(undefined), { code: 'VALIDATION_ERROR' });
+  });
 });
