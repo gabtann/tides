@@ -2,8 +2,8 @@ import { useCallback } from 'react'
 import { useAppState } from '../context/stateContext'
 import { errorMessage } from '../utils/errors'
 
-export const SCAN_ERROR_MESSAGE =
-  'Scan failed: the TIDES service could not be reached. Check your connection and try again.'
+// Hanya dipakai kalau api me-reject tanpa Error ber-message; biasanya pesan asli dari api yang tampil.
+export const SCAN_ERROR_MESSAGE = 'Scan failed. Please try again.'
 
 export function useScan() {
   const { state, dispatch, api } = useAppState()

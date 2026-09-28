@@ -74,8 +74,9 @@ describe('ResearchQueueScreen', () => {
 
   it('recovers from a failed scan with Retry scan', async () => {
     const { user, controlled } = await scanFromWatchlist(['BBRI'])
-    await controlled.reject('scanWatchlist', 'Invalid Sectors API key')
-    expect(screen.getByRole('alert')).toHaveTextContent('Invalid Sectors API key')
+    await controlled.reject('scanWatchlist', 'SECTORS_UNAVAILABLE: Failed to reach Sectors API')
+    expect(screen.getByRole('alert')).toHaveTextContent('SECTORS_UNAVAILABLE: Failed to reach Sectors API')
+    expect(screen.getByRole('alert')).not.toHaveTextContent(/could not be reached/)
     expect(within(screen.getByRole('alert')).queryByRole('link')).not.toBeInTheDocument()
     expect(screen.getByText(DISCLAIMER)).toBeInTheDocument()
 
@@ -84,6 +85,15 @@ describe('ResearchQueueScreen', () => {
     await controlled.resolveNext()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(groupHeadings()).toEqual(['High priority'])
+  })
+
+  it('falls back to a short message when the scan rejects with a non-Error', async () => {
+    seedWatchlist(['BBRI'])
+    const api = { ...createControlledApi().api, scanWatchlist: () => Promise.reject('boom') }
+    const { user } = renderApp({ api })
+    await watchlistLoaded()
+    await user.click(screen.getByRole('button', { name: 'Scan Watchlist' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Scan failed. Please try again.')
   })
 
   it('restores the last scan after a reload', async () => {

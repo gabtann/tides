@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { ErrorState } from '../../components/ErrorState'
+import { HeroSection } from '../../components/HeroSection'
 import { LoadingState } from '../../components/LoadingState'
 import { WATCHLIST_LOAD_ERROR_MESSAGE } from '../../context/loadWatchlist'
 import { useScan } from '../../hooks/useScan'
@@ -55,7 +56,11 @@ export function WatchlistScreen() {
         ) : !loaded ? (
           <LoadingState message="Loading your watchlist…" />
         ) : items.length === 0 ? (
-          <p className="max-w-[60ch] text-muted">Add your first ticker, for example BBRI, to start scanning.</p>
+          <>
+            <HeroSection />
+            <hr className="mb-8 border-line" />
+            <p className="max-w-[60ch] text-muted">Add your first ticker, for example BBRI, to start scanning.</p>
+          </>
         ) : (
           <>
             {removeError && (
@@ -85,39 +90,43 @@ export function WatchlistScreen() {
         )}
       </div>
 
-      <form onSubmit={(event) => void handleSubmit(event)} noValidate className="mt-6">
-        <label htmlFor="ticker-input" className="block text-[13px] leading-[18px] text-muted">
-          Ticker
-        </label>
-        <div className="mt-1 flex gap-2">
-          <input
-            id="ticker-input"
-            value={input}
-            onChange={(event) => {
-              setInput(event.target.value)
-              setError(null)
-            }}
-            disabled={!loaded || adding}
-            placeholder="BBRI"
-            autoComplete="off"
-            aria-invalid={error ? true : undefined}
-            aria-describedby={error ? 'ticker-error' : undefined}
-            className="min-w-0 flex-1 rounded-[10px] border border-line bg-surface px-3 py-2 text-fg uppercase placeholder:text-muted disabled:opacity-60"
-          />
-          <Button type="submit" variant="secondary" className="shrink-0" disabled={!loaded || adding}>
-            + Add Stock
+      <Card className="mt-6">
+        <div role="group" aria-label="Watchlist controls">
+          <form onSubmit={(event) => void handleSubmit(event)} noValidate>
+            <label htmlFor="ticker-input" className="block text-[13px] leading-[18px] text-muted">
+              Ticker
+            </label>
+            <div className="mt-1 flex gap-2">
+              <input
+                id="ticker-input"
+                value={input}
+                onChange={(event) => {
+                  setInput(event.target.value)
+                  setError(null)
+                }}
+                disabled={!loaded || adding}
+                placeholder="BBRI"
+                autoComplete="off"
+                aria-invalid={error ? true : undefined}
+                aria-describedby={error ? 'ticker-error' : undefined}
+                className="min-w-0 flex-1 rounded-[10px] border border-line bg-surface px-3 py-2 text-fg uppercase placeholder:text-muted disabled:opacity-60"
+              />
+              <Button type="submit" variant="secondary" className="shrink-0" disabled={!loaded || adding}>
+                + Add Stock
+              </Button>
+            </div>
+            {error && (
+              <p id="ticker-error" className="mt-2 border-l-2 border-l-high pl-2 text-[13px] leading-[18px] text-fg">
+                {error}
+              </p>
+            )}
+          </form>
+
+          <Button className="mt-8 w-full" onClick={handleScan} disabled={!canScan || busy}>
+            Scan Watchlist
           </Button>
         </div>
-        {error && (
-          <p id="ticker-error" className="mt-2 border-l-2 border-l-high pl-2 text-[13px] leading-[18px] text-fg">
-            {error}
-          </p>
-        )}
-      </form>
-
-      <Button className="mt-8 w-full" onClick={handleScan} disabled={!canScan || busy}>
-        Scan Watchlist
-      </Button>
+      </Card>
     </section>
   )
 }
