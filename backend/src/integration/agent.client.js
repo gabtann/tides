@@ -1,4 +1,4 @@
-const config = require("../config/env");
+import { config } from "../config/env.js";
 
 const AGENT_TIMEOUT_MS = 15000;
 
@@ -43,6 +43,4 @@ async function runAgent(input) {
   }
 }
 
-module.exports = {
-  runAgent,
-};
+export { runAgent };
