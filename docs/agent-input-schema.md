@@ -48,12 +48,18 @@ Internal TIDES ticker symbol.
 
 Information about the signal detected by the backend.
 
-#### `signal.type`
+### `signal.type`
 
 Type of detected research signal.
 
 - Type: `string`
-- Example: `PRICE_MOVEMENT`
+- Allowed values:
+  - `PRICE_MOVEMENT`
+  - `VOLUME_MOVEMENT`
+  - `HISTORICAL_DEVIATION`
+  - `PEER_DIVERGENCE`
+  - `FUNDAMENTAL_CHANGE`
+  - `VALUATION_SIGNAL`
 
 #### `signal.priority`
 

@@ -37,6 +37,7 @@ Retrieves historical daily market data.
 
 **Input:**
 - `ticker: string`
+- `period: string`
 
 **Output:**
 - Date
@@ -126,6 +127,17 @@ The Agent should select tools based on the detected signal and the evidence requ
 The Agent should not automatically call every available tool.
 
 The Agent should avoid unnecessary data retrieval and stop the investigation when sufficient evidence has been collected or when the available evidence is insufficient.
+
+### Tool Usage Rules
+
+- `getOverview` should be used when company or current market context is required.
+- `getHistorical` should be used for price, volume, and historical deviation signals.
+- `getPeers` should be used to compare the investigated company with relevant peers.
+- `getValuation` should be used when valuation context is relevant.
+- `getFundamentals` should be used when fundamental business or financial context is relevant.
+- Primary tools should be used before optional tools.
+- Optional tools should only be called when the available evidence is insufficient.
+- The Agent should stop when the evidence is sufficient, relevant data is unavailable, or additional tools would not materially improve the investigation.
 
 ## Evidence Sources
 
