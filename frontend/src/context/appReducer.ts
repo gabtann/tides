@@ -1,3 +1,4 @@
+import type { ChallengeResult } from '../types/challenge'
 import type { InvestigationResult } from '../types/investigation'
 import type { ScanResult } from '../types/signal'
 import type { Ticker } from '../types/ticker'
@@ -24,11 +25,19 @@ export interface InvestigationState {
   error?: string
 }
 
+export interface ChallengeState {
+  status: LoadStatus
+  result?: ChallengeResult
+  error?: string
+}
+
 export interface AppState {
   watchlist: WatchlistState
   scan: ScanState
   // Per ticker, hanya di memori: hasil investigasi tidak disimpan ke localStorage.
   investigations: Record<Ticker, InvestigationState>
+   // Sama seperti investigations: per ticker, hanya di memori. Evidence brief ikut di dalam ChallengeResult.
+  challenges: Record<Ticker, ChallengeState>
 }
 
 export type AppAction =
@@ -44,12 +53,16 @@ export type AppAction =
   | { type: 'INVESTIGATE_START'; ticker: Ticker }
   | { type: 'INVESTIGATE_SUCCESS'; ticker: Ticker; result: InvestigationResult }
   | { type: 'INVESTIGATE_ERROR'; ticker: Ticker; error: string }
+  | { type: 'CHALLENGE_START'; ticker: Ticker }
+  | { type: 'CHALLENGE_SUCCESS'; ticker: Ticker; result: ChallengeResult }
+  | { type: 'CHALLENGE_ERROR'; ticker: Ticker; error: string }
 
 export function createInitialState(result: ScanResult | null): AppState {
   return {
     watchlist: { status: 'idle', items: [] },
     scan: result ? { status: 'success', result } : { status: 'idle' },
     investigations: {},
+    challenges: {},
   }
 }
 
@@ -85,9 +98,19 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return withInvestigation(state, action.ticker, { status: 'success', result: action.result })
     case 'INVESTIGATE_ERROR':
       return withInvestigation(state, action.ticker, { status: 'error', error: action.error })
+    case 'CHALLENGE_START':
+      return withChallenge(state, action.ticker, { status: 'loading' })
+    case 'CHALLENGE_SUCCESS':
+      return withChallenge(state, action.ticker, { status: 'success', result: action.result })
+    case 'CHALLENGE_ERROR':
+      return withChallenge(state, action.ticker, { status: 'error', error: action.error })
   }
 }
 
 function withInvestigation(state: AppState, ticker: Ticker, investigation: InvestigationState): AppState {
   return { ...state, investigations: { ...state.investigations, [ticker]: investigation } }
+}
+
+function withChallenge(state: AppState, ticker: Ticker, challenge: ChallengeState): AppState {
+  return { ...state, challenges: { ...state.challenges, [ticker]: challenge } }
 }

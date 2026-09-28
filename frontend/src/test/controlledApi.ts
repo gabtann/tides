@@ -2,7 +2,7 @@ import { act } from '@testing-library/react'
 import { createMockTidesApi } from '../services/mockTidesApi'
 import type { TidesApi } from '../services/tidesApi'
 
-type Held = 'getWatchlist' | 'addTicker' | 'removeTicker' | 'scanWatchlist' | 'investigate'
+type Held = 'getWatchlist' | 'addTicker' | 'removeTicker' | 'scanWatchlist' | 'investigate' | 'challenge'
 
 interface Pending {
   run: () => Promise<unknown>
@@ -21,8 +21,16 @@ export function createControlledApi({ hold = [] }: { hold?: Held[] } = {}) {
     removeTicker: [],
     scanWatchlist: [],
     investigate: [],
+    challenge: [],
   }
-  const calls: Record<Held, number> = { getWatchlist: 0, addTicker: 0, removeTicker: 0, scanWatchlist: 0, investigate: 0 }
+const calls: Record<Held, number> = {
+    getWatchlist: 0,
+    addTicker: 0,
+    removeTicker: 0,
+    scanWatchlist: 0,
+    investigate: 0,
+    challenge: 0,
+  }
 
   function wrap<T>(method: Held, run: () => Promise<T>): Promise<T> {
     calls[method] += 1
@@ -45,6 +53,7 @@ export function createControlledApi({ hold = [] }: { hold?: Held[] } = {}) {
     removeTicker: (ticker) => wrap('removeTicker', () => base.removeTicker(ticker)),
     scanWatchlist: () => wrap('scanWatchlist', () => base.scanWatchlist()),
     investigate: (ticker) => wrap('investigate', () => base.investigate(ticker)),
+    challenge: (ticker) => wrap('challenge', () => base.challenge(ticker)),
   }
 
   async function resolve(method: Held) {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { ChallengeResult } from '../types/challenge'
 import type { InvestigationResult } from '../types/investigation'
 import type { ScanResult } from '../types/signal'
 import { appReducer, createInitialState, type AppState } from './appReducer'
@@ -18,6 +19,7 @@ describe('createInitialState', () => {
       watchlist: { status: 'idle', items: [] },
       scan: { status: 'idle' },
       investigations: {},
+      challenges: {},
     })
   })
 
@@ -122,5 +124,51 @@ describe('investigations', () => {
       error: 'down',
     })
     expect(start(failed, 'BBRI').investigations.BBRI).toEqual({ status: 'loading' })
+  })
+})
+
+describe('challenges', () => {
+  const brief = {
+    ticker: 'BBRI',
+    observed: 'o',
+    compared: 'c',
+    interpreted: 'i',
+    unknown: 'u',
+    evidenceStrength: 'MODERATE' as const,
+    researchPriority: 'HIGH' as const,
+    generatedAt: at,
+  }
+  const challenge: ChallengeResult = {
+    ticker: 'BBRI',
+    initialSignal: 'Unusual price-volume movement',
+    challengeFinding: 'Peers moved less',
+    signalStrength: 'MODERATE',
+    brief,
+  }
+  const start = (state: AppState, ticker: string) => appReducer(state, { type: 'CHALLENGE_START', ticker })
+
+  it('marks one ticker as loading without touching investigations', () => {
+    const next = start(createInitialState(null), 'BBRI')
+    expect(next.challenges).toEqual({ BBRI: { status: 'loading' } })
+    expect(next.investigations).toEqual({})
+  })
+
+  it('stores the result, including the evidence brief', () => {
+    const next = appReducer(start(createInitialState(null), 'BBRI'), {
+      type: 'CHALLENGE_SUCCESS',
+      ticker: 'BBRI',
+      result: challenge,
+    })
+    expect(next.challenges.BBRI).toEqual({ status: 'success', result: challenge })
+  })
+
+  it('records an error and clears it when retried', () => {
+    const failed = appReducer(start(createInitialState(null), 'BBRI'), {
+      type: 'CHALLENGE_ERROR',
+      ticker: 'BBRI',
+      error: 'down',
+    })
+    expect(failed.challenges.BBRI).toEqual({ status: 'error', error: 'down' })
+    expect(start(failed, 'BBRI').challenges.BBRI).toEqual({ status: 'loading' })
   })
 })

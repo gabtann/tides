@@ -74,10 +74,9 @@ describe('ResearchQueueScreen', () => {
 
   it('recovers from a failed scan with Retry scan', async () => {
     const { user, controlled } = await scanFromWatchlist(['BBRI'])
-    await controlled.rejectNext()
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Scan failed: the TIDES service could not be reached. Check your connection and try again.',
-    )
+    await controlled.reject('scanWatchlist', 'SECTORS_UNAVAILABLE: Failed to reach Sectors API')
+    expect(screen.getByRole('alert')).toHaveTextContent('SECTORS_UNAVAILABLE: Failed to reach Sectors API')
+    expect(screen.getByRole('alert')).not.toHaveTextContent(/could not be reached/)
     expect(within(screen.getByRole('alert')).queryByRole('link')).not.toBeInTheDocument()
     expect(screen.getByText(DISCLAIMER)).toBeInTheDocument()
 
@@ -86,6 +85,15 @@ describe('ResearchQueueScreen', () => {
     await controlled.resolveNext()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(groupHeadings()).toEqual(['High priority'])
+  })
+
+  it('falls back to a short message when the scan rejects with a non-Error', async () => {
+    seedWatchlist(['BBRI'])
+    const api = { ...createControlledApi().api, scanWatchlist: () => Promise.reject('boom') }
+    const { user } = renderApp({ api })
+    await watchlistLoaded()
+    await user.click(screen.getByRole('button', { name: 'Scan Watchlist' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Scan failed. Please try again.')
   })
 
   it('restores the last scan after a reload', async () => {
@@ -108,12 +116,14 @@ describe('ResearchQueueScreen', () => {
     expect(screen.getByText(/2 tickers shown/)).toBeInTheDocument()
   })
 
-  it('shows the neutral message and disables Rescan when every scanned ticker was removed', async () => {
+  it('points to the watchlist and disables Rescan when every scanned ticker was removed', async () => {
     seedWatchlist([])
     seedScan(storedScan)
     renderApp({ route: '/queue' })
     await watchlistLoaded()
-    expect(screen.getByText('No significant changes across your watchlist.')).toBeInTheDocument()
+    expect(screen.getByText(/Your watchlist is empty/)).toBeInTheDocument()
+    expect(screen.queryByText('No significant changes across your watchlist.')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Go to watchlist' })).toHaveAttribute('href', '/')
     expect(screen.queryByRole('link', { name: /BBRI/ })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Rescan' })).toBeDisabled()
   })
@@ -159,6 +169,16 @@ describe('ResearchQueueScreen', () => {
     await user.click(screen.getByRole('button', { name: 'Retry' }))
     await controlled.resolve('getWatchlist')
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /BBRI/ })).toBeInTheDocument()
+  })
+
+  it('lists tickers that could not be scanned next to the results', async () => {
+    seedWatchlist(['BBRI', 'ZZZZ'])
+    seedScan({ ...storedScan, errors: [{ ticker: 'ZZZZ', message: 'Symbol not found on Sectors' }] })
+    renderApp({ route: '/queue' })
+    await watchlistLoaded()
+    expect(screen.getByRole('status')).toHaveTextContent('1 ticker could not be scanned')
+    expect(screen.getByRole('status')).toHaveTextContent('ZZZZ: Symbol not found on Sectors')
     expect(screen.getByRole('link', { name: /BBRI/ })).toBeInTheDocument()
   })
 })

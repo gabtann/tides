@@ -4,8 +4,22 @@ export function getWatchlist() {
   return watchlistStore.getAll();
 }
 
+import { normalizeTicker } from '../utils/ticker.js';
+
 export function addToWatchlist(symbol) {
-  const clean = symbol.trim().toUpperCase();
+  if (typeof symbol !== 'string' || !/^[A-Za-z0-9]{1,10}(\.[JKjk]{2})?$/.test(symbol)) {
+    const err = new Error(`Invalid symbol format`);
+    err.status = 400;
+    err.code = 'VALIDATION_ERROR';
+    throw err;
+  }
+  const clean = normalizeTicker(symbol);
+  if (!clean) {
+    const err = new Error(`Invalid symbol format`);
+    err.status = 400;
+    err.code = 'VALIDATION_ERROR';
+    throw err;
+  }
   if (watchlistStore.exists(clean)) {
     const err = new Error(`Symbol '${clean}' already in watchlist`);
     err.status = 400;
