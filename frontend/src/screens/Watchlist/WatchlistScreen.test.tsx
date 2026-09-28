@@ -49,6 +49,70 @@ describe('WatchlistScreen', () => {
     expect(scanButton()).toBeDisabled()
   })
 
+  it('groups the ticker input, Add Stock and Scan in one card below the first-ticker hint', async () => {
+    renderApp()
+    await watchlistLoaded()
+    const controls = screen.getByRole('group', { name: 'Watchlist controls' })
+    const hint = screen.getByText('Add your first ticker, for example BBRI, to start scanning.')
+    expect(within(controls).getByRole('textbox', { name: 'Ticker' })).toBeInTheDocument()
+    expect(within(controls).getByRole('button', { name: '+ Add Stock' })).toBeInTheDocument()
+    expect(within(controls).getByRole('button', { name: 'Scan Watchlist' })).toBeInTheDocument()
+    expect(controls).not.toContainElement(hint)
+    expect(hint.compareDocumentPosition(controls) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  describe('hero', () => {
+    const hero = () => screen.queryByRole('img', { name: 'TIDES' })
+
+    it('shows when the watchlist loaded empty', async () => {
+      renderApp()
+      await watchlistLoaded()
+      expect(hero()).toBeInTheDocument()
+    })
+
+    it('is separated from the first-ticker hint by a divider', async () => {
+      renderApp()
+      await watchlistLoaded()
+      const divider = screen.getByRole('separator')
+      const hint = screen.getByText('Add your first ticker, for example BBRI, to start scanning.')
+      expect(hero()!.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+      expect(divider.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('stays hidden while the watchlist is loading', async () => {
+      const controlled = createControlledApi({ hold: ['getWatchlist'] })
+      renderApp({ api: controlled.api })
+      expect(screen.getByRole('status')).toBeInTheDocument()
+      expect(hero()).not.toBeInTheDocument()
+      await controlled.resolve('getWatchlist')
+    })
+
+    it('stays hidden when the watchlist failed to load', async () => {
+      const controlled = createControlledApi({ hold: ['getWatchlist'] })
+      renderApp({ api: controlled.api })
+      await controlled.reject('getWatchlist')
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+      expect(hero()).not.toBeInTheDocument()
+    })
+
+    it('stays hidden when the watchlist has a ticker', async () => {
+      seedWatchlist(['BBRI'])
+      renderApp()
+      await watchlistLoaded()
+      expect(hero()).not.toBeInTheDocument()
+      expect(screen.queryByRole('separator')).not.toBeInTheDocument()
+    })
+
+    it('disappears once the first ticker is added', async () => {
+      const { user } = renderApp()
+      await watchlistLoaded()
+      expect(hero()).toBeInTheDocument()
+      await user.type(tickerInput(), 'BBRI{Enter}')
+      expect(await within(await screen.findByRole('list')).findByText('BBRI')).toBeInTheDocument()
+      expect(hero()).not.toBeInTheDocument()
+    })
+  })
+
   it('adds a trimmed, uppercased ticker through the backend and clears the input', async () => {
     const { user } = renderApp()
     await watchlistLoaded()
