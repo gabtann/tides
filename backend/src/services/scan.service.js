@@ -40,7 +40,26 @@ export async function runScan() {
       const peers = normalizePeers(peersRaw);
 
       const signals = runSignalEngine(symbol, current, history, peers);
-      allSignals.push(...signals);
+
+      const agentSignals = signals.map((signal) => ({
+        ...signal,
+        currentContext: {
+          currentPrice: current.price,
+          dailyChange: current.daily_price_change,
+          latestDate: current.latest_close_date,
+          sector: current.sector,
+          industry: current.industry,
+        },
+        availableTools: [
+          'getOverview',
+          'getHistorical',
+          'getPeers',
+          'getValuation',
+          'getFundamentals',
+        ],
+      }));
+
+      allSignals.push(...agentSignals);
     } catch (err) {
       errors.push({ symbol, message: err.message, code: err.code || 'INTERNAL_ERROR' });
     }
