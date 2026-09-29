@@ -12,13 +12,17 @@ The Agent receives normalized TIDES data and signal context rather than raw Sect
 {
   "ticker": "BBCA",
   "signal": {
-    "type": "PRICE_MOVEMENT",
-    "priority": "HIGH",
-    "description": "Price movement requires further investigation."
+    "type": "PRICE_CHANGE",
+    "direction": "UP",
+    "magnitude": "6.20%",
+    "allSignals": [
+      { "type": "PRICE_CHANGE", "direction": "UP", "magnitude": "6.20%" },
+      { "type": "VOLUME_SPIKE", "magnitude": "2.3x average" }
+    ]
   },
   "currentContext": {
     "currentPrice": 8500,
-    "dailyChange": 4.2,
+    "dailyChange": 0.062,
     "latestDate": "2026-09-25",
     "sector": "Financials",
     "industry": "Banks"
@@ -50,17 +54,43 @@ Information about the signal detected by the backend.
 
 #### `signal.type`
 
-Type of detected research signal.
+Type of detected research signal, as produced by the TIDES signal engine.
 
 - Type: `string`
-- Example: `PRICE_MOVEMENT`
+- Allowed values: `PRICE_CHANGE`, `VOLUME_SPIKE`, `NEAR_90D_HIGH`, `NEAR_90D_LOW`
+- Example: `PRICE_CHANGE`
+
+> **Note:** Earlier drafts of this document used `PRICE_MOVEMENT`. The canonical value used by `signal-engine.service.js` and `httpTidesApi.ts` is `PRICE_CHANGE`.
+
+#### `signal.direction`
+
+Price movement direction. Only present for `PRICE_CHANGE` signals.
+
+- Type: `string`
+- Allowed values: `UP`, `DOWN`
+- Optional
+
+#### `signal.magnitude`
+
+Human-readable magnitude of the detected signal.
+
+- Type: `string`
+- Examples: `"6.20%"` (price change), `"2.3x average"` (volume spike), `"97.1% of 90d range"` (deviation)
+
+#### `signal.allSignals`
+
+All signals detected for this ticker in the same scan. Present when the backend auto-enriches the payload from the last scan result and multiple signals exist for the ticker.
+
+- Type: `Array<{ type, direction?, magnitude }>`
+- Optional
 
 #### `signal.priority`
 
-Initial research priority assigned by the signal engine.
+Initial research priority. Optional — if absent, the Agent or backend will derive priority from `evidenceStrength`.
 
 - Type: `string`
 - Allowed values: `HIGH`, `MEDIUM`, `LOW`
+- Optional
 
 Research priority indicates that a signal may deserve further investigation. It is not an investment recommendation.
 
@@ -125,9 +155,10 @@ The Agent should select tools based on the signal and evidence required rather t
 
 ## Input Principles
 
-1. Ticker uses the canonical TIDES format.
+1. Ticker uses the canonical TIDES format (uppercase, no `.JK` suffix).
 2. Data passed to the Agent should come from the TIDES internal schema.
 3. Raw Sectors API response structures should not be passed directly to the Agent.
 4. Signal priority represents research priority, not investment advice.
 5. Missing or unavailable data must remain explicit rather than being replaced with unsupported assumptions.
 6. The Agent may request additional evidence through the available tools during investigation.
+7. **Minimal payload:** The backend accepts `{ "ticker": "BBCA" }` as a valid minimum payload. When `signal` or `currentContext` are absent, the backend will attempt to auto-enrich from the most recent scan result before forwarding to the Agent. A full payload (with `signal`, `currentContext`, and `availableTools`) is preferred for deterministic behaviour.
