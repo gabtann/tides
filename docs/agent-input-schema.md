@@ -12,17 +12,17 @@ The Agent receives normalized TIDES data and signal context rather than raw Sect
 {
   "ticker": "BBCA",
   "signal": {
-    "type": "PRICE_CHANGE",
-    "direction": "UP",
-    "magnitude": "6.20%",
-    "allSignals": [
-      { "type": "PRICE_CHANGE", "direction": "UP", "magnitude": "6.20%" },
-      { "type": "VOLUME_SPIKE", "magnitude": "2.3x average" }
-    ]
+    "type": "PRICE_MOVEMENT",
+    "priority": "HIGH",
+    "description": "Price movement requires further investigation.",
+    "details": {
+      "direction": "UP",
+      "magnitude": 6.2
+    }
   },
   "currentContext": {
     "currentPrice": 8500,
-    "dailyChange": 0.062,
+    "dailyChange": 6.2,
     "latestDate": "2026-09-25",
     "sector": "Financials",
     "industry": "Banks"
@@ -30,9 +30,7 @@ The Agent receives normalized TIDES data and signal context rather than raw Sect
   "availableTools": [
     "getOverview",
     "getHistorical",
-    "getPeers",
-    "getValuation",
-    "getFundamentals"
+    "getPeers"
   ]
 }
 
@@ -57,25 +55,30 @@ Information about the signal detected by the backend.
 Type of detected research signal, as produced by the TIDES signal engine.
 
 - Type: `string`
-- Allowed values: `PRICE_CHANGE`, `VOLUME_SPIKE`, `NEAR_90D_HIGH`, `NEAR_90D_LOW`
-- Example: `PRICE_CHANGE`
+- Allowed values: `PRICE_MOVEMENT`, `VOLUME_MOVEMENT`, `HISTORICAL_DEVIATION`, `PEER_DIVERGENCE`
+- Example: `PRICE_MOVEMENT`
 
-> **Note:** Earlier drafts of this document used `PRICE_MOVEMENT`. The canonical value used by `signal-engine.service.js` and `httpTidesApi.ts` is `PRICE_CHANGE`.
+#### `signal.details`
 
-#### `signal.direction`
+Detailed information about the signal.
 
-Price movement direction. Only present for `PRICE_CHANGE` signals.
+- Type: `object`
+- Contains: `direction`, `magnitude`
+
+#### `signal.details.direction`
+
+Price movement direction. Only present for `PRICE_MOVEMENT` and `HISTORICAL_DEVIATION` signals.
 
 - Type: `string`
-- Allowed values: `UP`, `DOWN`
+- Allowed values: `UP`, `DOWN`, `HIGH`, `LOW`
 - Optional
 
-#### `signal.magnitude`
+#### `signal.details.magnitude`
 
-Human-readable magnitude of the detected signal.
+Numerical magnitude of the detected signal (in percentage or multiplier).
 
-- Type: `string`
-- Examples: `"6.20%"` (price change), `"2.3x average"` (volume spike), `"97.1% of 90d range"` (deviation)
+- Type: `number`
+- Examples: `6.2` (price change), `2.3` (volume multiplier), `97.1` (deviation)
 
 #### `signal.allSignals`
 
@@ -148,8 +151,6 @@ Initial available tools:
 - `getOverview`
 - `getHistorical`
 - `getPeers`
-- `getValuation`
-- `getFundamentals`
 
 The Agent should select tools based on the signal and evidence required rather than automatically calling every available tool.
 

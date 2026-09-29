@@ -1,6 +1,7 @@
 import { runAgent } from '../integration/agent.client.js';
 import { buildEvidenceBrief } from '../services/evidence.service.js';
-import { getLastSignals } from '../services/scan.service.js';
+import { getOverview } from '../integration/sectors.client.js';
+import { normalizeOverview } from '../services/sectors-normalizer.service.js';
 import { normalizeTicker } from '../utils/ticker.js';
 
 export async function investigateSignal(req, res, next) {
@@ -30,39 +31,43 @@ export async function investigateSignal(req, res, next) {
       });
     }
 
-    // ── Auto-Enrichment dari last scan ────────────────────────────────────────
-    // Jika client hanya mengirim { ticker } tanpa signal / currentContext,
-    // cari di hasil scan terakhir dan lengkapi payload secara otomatis.
-    // Ini memungkinkan Frontend memanggil endpoint dengan payload minimal.
+    // ── Auto-Enrichment dari live API ────────────────────────────────────────
     let payload = { ...req.body, ticker };
 
     const needsEnrichment = !payload.signal || !payload.currentContext;
     if (needsEnrichment) {
-      const lastSignals = getLastSignals();
-      // Cari semua signal untuk ticker ini (bisa > 1 signal per ticker)
-      const signals = lastSignals.filter((s) => s.ticker === ticker);
+      const rawOverview = await getOverview(ticker);
+      const current = normalizeOverview(rawOverview);
 
-      if (signals.length > 0) {
-        // Pakai signal pertama yang ditemukan; currentContext sama untuk semua signal satu ticker
-        const first = signals[0];
+      if (!payload.currentContext) {
+        const dailyChangePercent = current.daily_price_change !== null 
+          ? Number((current.daily_price_change * 100).toFixed(2)) 
+          : 0;
+          
+        payload.currentContext = {
+          currentPrice: current.price,
+          dailyChange: dailyChangePercent,
+          latestDate: current.price_date,
+          sector: current.sector,
+          industry: current.industry
+        };
+      }
 
-        if (!payload.signal) {
-          payload.signal = {
-            type: first.type,
-            direction: first.direction,
-            magnitude: first.magnitude,
-            // Jika ada banyak signal, sertakan sebagai daftar untuk konteks agent
-            allSignals: signals.map((s) => ({ type: s.type, direction: s.direction, magnitude: s.magnitude })),
-          };
-        }
+      if (!payload.signal) {
+        const dailyChange = payload.currentContext.dailyChange;
+        payload.signal = {
+          type: 'PRICE_MOVEMENT',
+          priority: 'HIGH',
+          description: 'Price movement requires further investigation.',
+          details: {
+            direction: dailyChange >= 0 ? 'UP' : 'DOWN',
+            magnitude: Math.abs(dailyChange)
+          }
+        };
+      }
 
-        if (!payload.currentContext && first.currentContext) {
-          payload.currentContext = first.currentContext;
-        }
-
-        if (!payload.availableTools && first.availableTools) {
-          payload.availableTools = first.availableTools;
-        }
+      if (!payload.availableTools) {
+        payload.availableTools = ["getOverview", "getHistorical", "getPeers"];
       }
     }
 

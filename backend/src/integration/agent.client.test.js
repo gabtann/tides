@@ -225,7 +225,7 @@ describe('agent.client — happy path', () => {
 
     const inputPayload = {
       ticker: 'BBCA',
-      signal: { type: 'PRICE_CHANGE', direction: 'UP', magnitude: '6.20%' },
+      signal: { type: 'PRICE_MOVEMENT', details: { direction: 'UP', magnitude: 6.2 } },
       currentContext: { currentPrice: 8500, sector: 'Financials' },
     };
 
@@ -242,7 +242,7 @@ describe('agent.client — happy path', () => {
     try {
       await runAgent(inputPayload);
       assert.equal(capturedBody.ticker, 'BBCA');
-      assert.equal(capturedBody.signal.type, 'PRICE_CHANGE');
+      assert.equal(capturedBody.signal.type, 'PRICE_MOVEMENT');
       assert.ok(capturedBody.currentContext);
     } finally {
       config.agentBaseUrl = saved;

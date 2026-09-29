@@ -122,17 +122,23 @@ Mengembalikan antrian sinyal dari hasil scan terakhir tanpa menjalankan scan bar
       "signals": [
         {
           "ticker": "BBCA",
-          "type": "PRICE_CHANGE",
-          "direction": "UP",
-          "magnitude": "6.20%",
+          "signal": {
+            "type": "PRICE_MOVEMENT",
+            "priority": "HIGH",
+            "description": "Price movement requires further investigation.",
+            "details": {
+              "direction": "UP",
+              "magnitude": 6.2
+            }
+          },
           "currentContext": {
             "currentPrice": 8500,
-            "dailyChange": 0.062,
+            "dailyChange": 6.2,
             "latestDate": "2026-09-26",
             "sector": "Financials",
             "industry": "Banks"
           },
-          "availableTools": ["getOverview", "getHistorical", "getPeers", "getValuation", "getFundamentals"]
+          "availableTools": ["getOverview", "getHistorical", "getPeers"]
         }
       ]
     }
@@ -152,18 +158,22 @@ Mengirimkan sinyal ke layanan AI Agent untuk investigasi mendalam dan mengembali
   {
     "ticker": "BBCA",
     "signal": {
-      "type": "PRICE_CHANGE",
-      "direction": "UP",
-      "magnitude": "6.20%"
+      "type": "PRICE_MOVEMENT",
+      "priority": "HIGH",
+      "description": "Price movement requires further investigation.",
+      "details": {
+        "direction": "UP",
+        "magnitude": 6.2
+      }
     },
     "currentContext": {
       "currentPrice": 8500,
-      "dailyChange": 0.062,
+      "dailyChange": 6.2,
       "latestDate": "2026-09-26",
       "sector": "Financials",
       "industry": "Banks"
     },
-    "availableTools": ["getOverview", "getHistorical", "getPeers", "getValuation", "getFundamentals"]
+    "availableTools": ["getOverview", "getHistorical", "getPeers"]
   }
   ```
 - **Response `200 OK`**:
