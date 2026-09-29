@@ -6,14 +6,16 @@ Defines the initial rules used by the TIDES AI Agent to select investigation too
 
 ## Signal-to-Tool Mapping
 
+The MVP supports the following signal types and investigation tools only.
+
+Future signal types and tools are not part of the MVP and should not be selected by the Agent.
+
 | Signal Type | Primary Tools | Optional Tools |
 |---|---|---|
-| `PRICE_MOVEMENT` | `getHistorical`, `getPeers` | `getOverview`, `getFundamentals`, `getValuation` |
+| `PRICE_MOVEMENT` | `getHistorical`, `getPeers` | `getOverview` |
 | `VOLUME_MOVEMENT` | `getHistorical`, `getPeers` | `getOverview` |
 | `HISTORICAL_DEVIATION` | `getHistorical`, `getPeers` | `getOverview` |
 | `PEER_DIVERGENCE` | `getPeers`, `getHistorical` | `getOverview` |
-| `FUNDAMENTAL_CHANGE` | `getFundamentals`, `getOverview` | `getHistorical`, `getPeers`, `getValuation` |
-| `VALUATION_SIGNAL` | `getValuation`, `getPeers` | `getOverview`, `getFundamentals` |
 
 ## Selection Rules
 
@@ -21,12 +23,10 @@ Defines the initial rules used by the TIDES AI Agent to select investigation too
 2. Use optional tools only when additional evidence is required.
 3. Do not call all available tools by default.
 4. Prefer historical and peer context when investigating price or volume signals.
-5. Use fundamental data when investigating changes related to company financial performance.
-6. Use valuation data when the investigation requires valuation context.
-7. Use peer data to challenge whether a signal is specific to the investigated company.
-8. Stop retrieving evidence when the available evidence is sufficient for the investigation.
-9. If required evidence is unavailable, explicitly report the limitation instead of making unsupported assumptions.
-10. Tool selection must support evidence-based investigation and must not produce direct buy, sell, or hold recommendations.
+5. Use peer data to challenge whether a signal is specific to the investigated company.
+6. Stop retrieving evidence when the available evidence is sufficient.
+7. If required evidence is unavailable, explicitly report the limitation instead of making unsupported assumptions.
+8. Tool selection must support evidence-based investigation and must not produce direct buy, sell, or hold recommendations.
 
 ## Investigation Completion
 
