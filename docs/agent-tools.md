@@ -8,6 +8,14 @@ The Agent selects tools based on the detected signal and the evidence required t
 
 ## Available Tools
 
+The MVP provides the following tools:
+
+- `getOverview`
+- `getHistorical`
+- `getPeers`
+
+Additional tools such as valuation and fundamentals are planned for future versions and are not available in the MVP.
+
 ### `getOverview`
 
 Retrieves the normalized company overview.
@@ -74,51 +82,6 @@ Provides peer context for challenging whether a signal is specific to the invest
 
 ---
 
-### `getValuation`
-
-Retrieves valuation data for the investigated company.
-
-**Input:**
-- `ticker: string`
-
-**Output:**
-- PE
-- PB
-- PS
-- PCF
-- PEG
-- EV/EBITDA
-- EV/Revenue
-- Other available valuation metrics
-
-**Purpose:**
-Provides valuation context when relevant to the investigation.
-
----
-
-### `getFundamentals`
-
-Retrieves available quarterly financial data.
-
-**Input:**
-- `ticker: string`
-
-**Output:**
-- Revenue
-- Gross profit
-- Operating profit
-- Earnings
-- EBIT
-- EBITDA
-- Total assets
-- Total liabilities
-- Total equity
-- Total debt
-- Operating cash flow
-- Free cash flow
-
-**Purpose:**
-Provides fundamental business context when relevant to the investigation.
 
 ## Tool Selection Principle
 
@@ -133,8 +96,7 @@ The Agent should avoid unnecessary data retrieval and stop the investigation whe
 - `getOverview` should be used when company or current market context is required.
 - `getHistorical` should be used for price, volume, and historical deviation signals.
 - `getPeers` should be used to compare the investigated company with relevant peers.
-- `getValuation` should be used when valuation context is relevant.
-- `getFundamentals` should be used when fundamental business or financial context is relevant.
+- The Agent should only use tools available in the MVP tool set.
 - Primary tools should be used before optional tools.
 - Optional tools should only be called when the available evidence is insufficient.
 - The Agent should stop when the evidence is sufficient, relevant data is unavailable, or additional tools would not materially improve the investigation.
