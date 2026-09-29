@@ -6,6 +6,15 @@ Defines when the TIDES AI Agent should stop retrieving evidence during an invest
 
 ## Signal-Specific Stopping Rules
 
+The MVP supports stopping rules for the following signal types only:
+
+- `PRICE_MOVEMENT`
+- `VOLUME_MOVEMENT`
+- `HISTORICAL_DEVIATION`
+- `PEER_DIVERGENCE`
+
+Future signal types are not part of the MVP.
+
 ### PRICE_MOVEMENT
 
 1. Retrieve `getHistorical`.
@@ -33,20 +42,6 @@ Defines when the TIDES AI Agent should stop retrieving evidence during an invest
 2. Retrieve `getHistorical`.
 3. Stop when the divergence can be assessed using peer and historical evidence.
 4. Use `getOverview` only when additional current context is required.
-
-### FUNDAMENTAL_CHANGE
-
-1. Retrieve `getFundamentals`.
-2. Retrieve `getOverview`.
-3. Stop when the fundamental change has sufficient business and current context.
-4. Use optional tools only when additional evidence is required.
-
-### VALUATION_SIGNAL
-
-1. Retrieve `getValuation`.
-2. Retrieve `getPeers`.
-3. Stop when the valuation signal has sufficient valuation and peer context.
-4. Use optional tools only when additional evidence is required.
 
 ## General Stopping Rules
 
