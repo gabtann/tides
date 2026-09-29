@@ -11,11 +11,15 @@ The Agent receives normalized TIDES data and signal context rather than raw Sect
 ```json
 {
   "ticker": "BBCA",
-  "signal": {
+    "signal": {
     "type": "PRICE_MOVEMENT",
     "priority": "HIGH",
-    "description": "Price movement requires further investigation."
-  },
+    "description": "Price movement requires further investigation.",
+    "details": {
+        "direction": "UP",
+        "magnitude": 6.2
+    }
+},
   "currentContext": {
     "currentPrice": 8500,
     "dailyChange": 4.2,
@@ -26,9 +30,7 @@ The Agent receives normalized TIDES data and signal context rather than raw Sect
   "availableTools": [
     "getOverview",
     "getHistorical",
-    "getPeers",
-    "getValuation",
-    "getFundamentals"
+    "getPeers"
   ]
 }
 
@@ -58,8 +60,11 @@ Type of detected research signal.
   - `VOLUME_MOVEMENT`
   - `HISTORICAL_DEVIATION`
   - `PEER_DIVERGENCE`
-  - `FUNDAMENTAL_CHANGE`
-  - `VALUATION_SIGNAL`
+
+The following signal types are planned for future versions and are not available in the MVP:
+
+- FUNDAMENTAL_CHANGE
+- VALUATION_SIGNAL
 
 #### `signal.priority`
 
@@ -75,6 +80,15 @@ Research priority indicates that a signal may deserve further investigation. It 
 Short description of the detected signal.
 
 - Type: `string`
+
+#### `signal.details`
+
+Additional structured information specific to the detected signal.
+
+- Type: `object`
+- Fields depend on the signal type.
+- Example fields may include `direction` and `magnitude` for price movement signals.
+- Signal-specific details must come from backend-detected data and must not be fabricated by the Agent.
 
 ### `currentContext`
 
@@ -124,8 +138,8 @@ Initial available tools:
 - `getOverview`
 - `getHistorical`
 - `getPeers`
-- `getValuation`
-- `getFundamentals`
+
+`getValuation` and `getFundamentals` are planned for future versions and are not available in the MVP.
 
 The Agent should select tools based on the signal and evidence required rather than automatically calling every available tool.
 
