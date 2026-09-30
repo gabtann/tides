@@ -75,9 +75,11 @@ Mendapatkan daftar simbol yang dipantau sistem saat ini.
   ```json
   {
     "success": true,
-    "data": [
-      { "symbol": "BBCA", "added_at": "2026-09-26T18:23:56.727Z" }
-    ]
+    "data": {
+      "watchlist": [
+        { "symbol": "BBCA", "added_at": "2026-09-26T18:23:56.727Z" }
+      ]
+    }
   }
   ```
 
@@ -100,30 +102,99 @@ Menambahkan simbol ke dalam watchlist.
 ### `DELETE /api/watchlist/:symbol`
 Menghapus simbol dari watchlist.
 - **Request**: `DELETE /api/watchlist/BBCA`
+- **Catatan:** Parameter `:symbol` menerima format dengan atau tanpa suffix `.JK` (mis. `BBCA.JK` akan menghapus `BBCA`).
 - **Response `200 OK`**:
   ```json
   {
     "success": true,
-    "data": { "deleted": "BBCA" }
+    "data": { "removed": "BBCA" }
   }
   ```
 
-### `POST /api/scan`
-Menjalankan *engine scan* pada seluruh simbol di watchlist dan mengembalikan hasil sinyalnya secara masif.
-- **Request**: `POST /api/scan`
+### `GET /api/signals`
+Mengembalikan antrian sinyal dari hasil scan terakhir tanpa menjalankan scan baru. Berguna untuk reload UI tanpa memicu ulang seluruh proses scan.
+- **Request**: `GET /api/signals`
 - **Response `200 OK`**:
   ```json
   {
     "success": true,
     "data": {
-      "scanned_at": "2026-09-26T18:23:57.209Z",
-      "symbols_scanned": 1,
-      "signals_detected": 0,
-      "queue": [],
-      "errors": []
+      "signals": [
+        {
+          "ticker": "BBCA",
+          "signal": {
+            "type": "PRICE_MOVEMENT",
+            "priority": "HIGH",
+            "description": "Price movement requires further investigation.",
+            "details": {
+              "direction": "UP",
+              "magnitude": 6.2
+            }
+          },
+          "currentContext": {
+            "currentPrice": 8500,
+            "dailyChange": 6.2,
+            "latestDate": "2026-09-26",
+            "sector": "Financials",
+            "industry": "Banks"
+          },
+          "availableTools": ["getOverview", "getHistorical", "getPeers"]
+        }
+      ]
     }
   }
   ```
+- **Catatan:** Mengembalikan `signals: []` jika server baru dijalankan dan `POST /api/scan` belum pernah dipanggil.
+
+### `POST /api/agent/investigate`
+Mengirimkan sinyal ke layanan AI Agent untuk investigasi mendalam dan mengembalikan *evidence brief* hasil analisis.
+- **Middleware**: `requireApiKey` → rate-limit (60 req/min)
+- **Request** (payload minimal — backend akan auto-enrichment dari last scan):
+  ```json
+  { "ticker": "BBCA" }
+  ```
+- **Request** (payload lengkap — direkomendasikan untuk hasil deterministik):
+  ```json
+  {
+    "ticker": "BBCA",
+    "signal": {
+      "type": "PRICE_MOVEMENT",
+      "priority": "HIGH",
+      "description": "Price movement requires further investigation.",
+      "details": {
+        "direction": "UP",
+        "magnitude": 6.2
+      }
+    },
+    "currentContext": {
+      "currentPrice": 8500,
+      "dailyChange": 6.2,
+      "latestDate": "2026-09-26",
+      "sector": "Financials",
+      "industry": "Banks"
+    },
+    "availableTools": ["getOverview", "getHistorical", "getPeers"]
+  }
+  ```
+- **Response `200 OK`**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "ticker": "BBCA",
+      "signal": "Price moved 6.20% in one day",
+      "observed": ["BBCA rose 6.20% on 2026-09-26"],
+      "compared": ["Sector peers rose 1.1% on average"],
+      "interpreted": ["Movement appears specific to BBCA"],
+      "unknown": ["Cause of volume spike not confirmed"],
+      "evidenceStrength": "MODERATE",
+      "researchPriority": "MEDIUM",
+      "generatedAt": "2026-09-26T18:23:57.209Z",
+      "limitation": null
+    }
+  }
+  ```
+- **Prasyarat:** `AGENT_BASE_URL` wajib diisi di `.env`. Jika kosong, endpoint mengembalikan error `AGENT_NOT_CONFIGURED`.
 
 ---
 
@@ -133,11 +204,14 @@ Berikut adalah kode error spesifik yang mungkin dimunculkan dalam respons objek 
 
 | Kode Error `code` | Status HTTP | Deskripsi / Penyebab |
 |---|---|---|
-| `VALIDATION_ERROR` | 400 | Field wajib tidak ada, berupa *array*, spasi kosong, atau gagal verifikasi path SSRF. |
+| `VALIDATION_ERROR` | 400 | Field wajib tidak ada, berupa *array*, spasi kosong, atau format ticker tidak valid. |
 | `LIMIT_REACHED` | 400 | Ukuran Watchlist melampaui batas maksimal (50). |
 | `RATE_LIMITED` | 429 | Jumlah pemanggilan per menit dilampaui (bawaan Node.js *Map limiter*). |
 | `DUPLICATE_ENTRY` | 400 | Ticker yang akan ditambahkan sudah ada pada *watchlist*. |
 | `NOT_FOUND` | 404 | Saat simbol yang akan dihapus tidak ada, ATAU Sectors HTTP 404. |
+| `AGENT_NOT_CONFIGURED` | 500 | `AGENT_BASE_URL` belum diatur di `.env`. |
+| `AGENT_TIMEOUT` | 504 | Request ke layanan AI Agent melebihi batas waktu 15 detik. |
+| `AGENT_REQUEST_FAILED` | 502 | Layanan AI Agent mengembalikan respons HTTP error. |
 | `SECTORS_BAD_REQUEST`| 400 | Sectors API HTTP 400 (salah format simbol). |
 | `SECTORS_TIMEOUT` | 504 | *AbortController* terpicu karena request Sectors melebihi 8000ms. |
 | `SECTORS_AUTH_FAILED` | 502 | Sectors API key tidak valid / kedaluwarsa. |

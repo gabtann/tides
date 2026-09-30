@@ -30,12 +30,21 @@ export function addToWatchlist(symbol) {
 }
 
 export function removeFromWatchlist(symbol) {
-  const removed = watchlistStore.remove(symbol.toUpperCase());
+  // Normalisasi dulu (strip .JK, uppercase) — konsisten dengan addToWatchlist.
+  // Tanpa ini, DELETE /watchlist/BBCA.JK gagal 404 meski BBCA ada di store.
+  const clean = normalizeTicker(symbol);
+  if (!clean) {
+    const err = new Error(`Invalid symbol format`);
+    err.status = 400;
+    err.code = 'VALIDATION_ERROR';
+    throw err;
+  }
+  const removed = watchlistStore.remove(clean);
   if (!removed) {
-    const err = new Error(`Symbol '${symbol}' not found`);
+    const err = new Error(`Symbol '${clean}' not found`);
     err.status = 404;
     err.code = 'NOT_FOUND';
     throw err;
   }
-  return symbol.toUpperCase();
+  return clean;
 }
