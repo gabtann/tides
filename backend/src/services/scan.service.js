@@ -47,7 +47,7 @@ export async function runScan() {
         currentContext: {
           currentPrice: current.price,
           dailyChange: current.daily_price_change,
-          latestDate: current.latest_close_date,
+          latestDate: current.price_date,
           sector: current.sector,
           industry: current.industry,
         },
@@ -55,8 +55,6 @@ export async function runScan() {
           'getOverview',
           'getHistorical',
           'getPeers',
-          'getValuation',
-          'getFundamentals',
         ],
       }));
 
