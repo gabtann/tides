@@ -19,10 +19,13 @@ export function detectPriceMovement(current) {
   if (Math.abs(current.daily_price_change) < PRICE_CHANGE_THRESHOLD) return null;
 
   return {
-    type: 'PRICE_CHANGE',
-    direction: current.daily_price_change > 0 ? 'UP' : 'DOWN', // Tambahan UX untuk AI/Frontend
-    magnitude: `${(current.daily_price_change * 100).toFixed(2)}%`,
-    raw_value: current.daily_price_change,
+    type: 'PRICE_MOVEMENT',
+    priority: 'HIGH',
+    description: 'Significant daily price movement detected.',
+    details: {
+      direction: current.daily_price_change > 0 ? 'UP' : 'DOWN',
+      magnitude: Number(Math.abs(current.daily_price_change * 100).toFixed(2)),
+    }
   };
 }
 
@@ -45,9 +48,13 @@ export function detectVolumeMovement(history) {
   if (ratio < VOLUME_MULTIPLIER_THRESHOLD) return null;
 
   return {
-    type: 'VOLUME_SPIKE',
-    magnitude: `${ratio.toFixed(1)}x average`,
-    raw_value: ratio,
+    type: 'VOLUME_MOVEMENT',
+    priority: 'MEDIUM',
+    description: 'Trading volume significantly above average.',
+    details: {
+      direction: 'UP',
+      magnitude: Number(ratio.toFixed(2)),
+    }
   };
 }
 
@@ -66,10 +73,26 @@ export function detectHistoricalDeviation(current) {
   const positionInRange = (current.price - current.ninety_day_low) / range;
 
   if (positionInRange >= 0.95) {
-    return { type: 'NEAR_90D_HIGH', magnitude: `${(positionInRange * 100).toFixed(1)}% of 90d range` };
+    return { 
+      type: 'HISTORICAL_DEVIATION', 
+      priority: 'MEDIUM',
+      description: 'Price is near 90-day high.',
+      details: {
+        direction: 'HIGH',
+        magnitude: Number((positionInRange * 100).toFixed(2))
+      }
+    };
   }
   if (positionInRange <= 0.05) {
-    return { type: 'NEAR_90D_LOW', magnitude: `${(positionInRange * 100).toFixed(1)}% of 90d range` };
+    return { 
+      type: 'HISTORICAL_DEVIATION', 
+      priority: 'MEDIUM',
+      description: 'Price is near 90-day low.',
+      details: {
+        direction: 'LOW',
+        magnitude: Number((positionInRange * 100).toFixed(2))
+      }
+    };
   }
   return null;
 }

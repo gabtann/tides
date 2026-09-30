@@ -1,15 +1,9 @@
-import { runAgent } from '../integration/agent.client.js';
-import { buildEvidenceBrief } from '../services/evidence.service.js';
+import { investigate } from '../services/agent.service.js';
 
-export async function investigateSignal(req, res, next) {
+export async function investigateTicker(req, res, next) {
   try {
-    const result = await runAgent(req.body);
-    const evidenceBrief = buildEvidenceBrief(result);
-
-    res.json({
-      success: true,
-      data: evidenceBrief,
-    });
+    const payload = await investigate(req.body);
+    res.json({ success: true, data: payload });
   } catch (err) {
     next(err);
   }
