@@ -1,0 +1,70 @@
+// backend/src/services/agent.service.js
+/**
+ * Investigation service implementing the POST /api/agent/investigate logic.
+ * It follows the three cases described in the task specification.
+ */
+import { normalizeTicker } from "../utils/ticker.js";
+import { getOverview, getDailyHistory, getPeers } from "../integration/sectors.client.js";
+import { normalizeOverview, normalizeDailyHistory, normalizePeers } from "../services/sectors-normalizer.service.js";
+import { runSignalEngine } from "./signal-engine.service.js";
+import { selectTopSignal } from "../utils/priority.js";
+import { buildAgentPayload } from "./agent-payload.service.js";
+
+export async function investigate(body) {
+  // 1. Validate ticker
+  const rawTicker = body?.ticker ?? body?.symbol;
+  const ticker = normalizeTicker(rawTicker);
+  if (!ticker) {
+    const err = new Error("Invalid or missing ticker");
+    err.status = 400;
+    err.code = "VALIDATION_ERROR";
+    throw err;
+  }
+
+  // Helper to fetch and normalize current context
+  const fetchCurrentContext = async () => {
+    const overview = await getOverview(ticker);
+    const current = normalizeOverview(overview);
+    return {
+      currentPrice: current.price,
+      dailyChange: Number((current.daily_price_change * 100).toFixed(2)),
+      latestDate: current.price_date,
+      sector: current.sector,
+      industry: current.industry,
+    };
+  };
+
+  // Case 1: both signal and currentContext provided
+  if (body.signal && body.currentContext) {
+    return buildAgentPayload(ticker, body.signal, body.currentContext);
+  }
+
+  // Case 2: signal present, but currentContext missing → live fetch only currentContext
+  if (body.signal && !body.currentContext) {
+    const currentContext = await fetchCurrentContext();
+    return buildAgentPayload(ticker, body.signal, currentContext);
+  }
+
+  // Case 3: fallback – no signal supplied
+  // Live fetch full data, run signal engine, pick top priority signal
+  const [overview, historyRaw, peersRaw] = await Promise.all([
+    getOverview(ticker),
+    getDailyHistory(ticker),
+    getPeers(ticker),
+  ]);
+  const normalizedCurrent = normalizeOverview(overview);
+  const normalizedHistory = normalizeDailyHistory(historyRaw);
+  const normalizedPeers = normalizePeers(peersRaw);
+
+  const signals = runSignalEngine(ticker, normalizedCurrent, normalizedHistory, normalizedPeers);
+  const topSignal = selectTopSignal(signals);
+  if (!topSignal) {
+    const err = new Error("No signal found");
+    err.status = 404;
+    err.code = "NO_SIGNAL_FOUND";
+    throw err;
+  }
+
+  const currentContext = await fetchCurrentContext();
+  return buildAgentPayload(ticker, topSignal, currentContext);
+}
