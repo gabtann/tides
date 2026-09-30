@@ -75,12 +75,12 @@ PENTING: Field yang dikembalikan adalah removed (bukan deleted).Error Codes:Code
           "description": "Price movement requires further investigation.",
           "details": {
             "direction": "UP",
-            "magnitude": 6.2
+            "magnitude": 0.062
           }
         },
         "currentContext": {
           "currentPrice": 8500,
-          "dailyChange": 6.2,
+          "dailyChange": 0.062,
           "latestDate": "2026-09-26",
           "sector": "Financials",
           "industry": "Banks"
@@ -105,12 +105,12 @@ FieldKeteranganscanned_atISO timestamp waktu scan dimulaisymbols_scannedJumlah s
           "description": "Price movement requires further investigation.",
           "details": {
             "direction": "UP",
-            "magnitude": 6.2
+            "magnitude": 0.062
           }
         },
         "currentContext": {
           "currentPrice": 8500,
-          "dailyChange": 6.2,
+          "dailyChange": 0.062,
           "latestDate": "2026-09-26",
           "sector": "Financials",
           "industry": "Banks"
@@ -129,12 +129,12 @@ Request Body — Payload Lengkap (deterministik, direkomendasikan):JSON{
     "description": "Price movement requires further investigation.",
     "details": {
       "direction": "UP",
-      "magnitude": 6.2
+      "magnitude": 0.062
     }
   },
   "currentContext": {
     "currentPrice": 8500,
-    "dailyChange": 6.2,
+    "dailyChange": 0.062,
     "latestDate": "2026-09-26",
     "sector": "Financials",
     "industry": "Banks"

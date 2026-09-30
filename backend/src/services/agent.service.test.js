@@ -33,12 +33,12 @@ const mockSignal = {
   type: 'PRICE_MOVEMENT',
   priority: 'HIGH',
   description: 'Price moved up',
-  details: { direction: 'UP', magnitude: 6.2 }
+  details: { direction: 'UP', magnitude: 0.062 }
 };
 
 const fullContext = {
   currentPrice: 8500,
-  dailyChange: 6.2,
+  dailyChange: 0.062,
   latestDate: '2026-09-26',
   sector: 'Financials',
   industry: 'Banks'

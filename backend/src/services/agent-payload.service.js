@@ -22,7 +22,7 @@ export function buildCurrentContext(current) {
   if ("currentPrice" in current && "dailyChange" in current) {
     return {
       currentPrice: current.currentPrice,
-      dailyChange: typeof current.dailyChange === "number" ? current.dailyChange : toPercent(current.dailyChange),
+      dailyChange: Number(current.dailyChange),
       latestDate: current.latestDate,
       sector: current.sector,
       industry: current.industry,

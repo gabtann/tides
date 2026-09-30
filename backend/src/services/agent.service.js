@@ -27,7 +27,7 @@ export async function investigate(body) {
     const current = normalizeOverview(overview);
     return {
       currentPrice: current.price,
-      dailyChange: Number((current.daily_price_change * 100).toFixed(2)),
+      dailyChange: Number(current.daily_price_change),
       latestDate: current.price_date,
       sector: current.sector,
       industry: current.industry,
