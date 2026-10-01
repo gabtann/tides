@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { ChallengeResult } from '../types/challenge'
+import type { EvidenceBrief } from '../types/evidenceBrief'
 import type { InvestigationResult } from '../types/investigation'
 import type { ScanResult } from '../types/signal'
 import { appReducer, createInitialState, type AppState } from './appReducer'
@@ -20,6 +21,7 @@ describe('createInitialState', () => {
       scan: { status: 'idle' },
       investigations: {},
       challenges: {},
+      evidenceBriefs: {},
     })
   })
 
@@ -128,22 +130,11 @@ describe('investigations', () => {
 })
 
 describe('challenges', () => {
-  const brief = {
-    ticker: 'BBRI',
-    observed: 'o',
-    compared: 'c',
-    interpreted: 'i',
-    unknown: 'u',
-    evidenceStrength: 'MODERATE' as const,
-    researchPriority: 'HIGH' as const,
-    generatedAt: at,
-  }
   const challenge: ChallengeResult = {
     ticker: 'BBRI',
     initialSignal: 'Unusual price-volume movement',
     challengeFinding: 'Peers moved less',
     signalStrength: 'MODERATE',
-    brief,
   }
   const start = (state: AppState, ticker: string) => appReducer(state, { type: 'CHALLENGE_START', ticker })
 
@@ -153,7 +144,7 @@ describe('challenges', () => {
     expect(next.investigations).toEqual({})
   })
 
-  it('stores the result, including the evidence brief', () => {
+  it('stores the result', () => {
     const next = appReducer(start(createInitialState(null), 'BBRI'), {
       type: 'CHALLENGE_SUCCESS',
       ticker: 'BBRI',
@@ -170,5 +161,46 @@ describe('challenges', () => {
     })
     expect(failed.challenges.BBRI).toEqual({ status: 'error', error: 'down' })
     expect(start(failed, 'BBRI').challenges.BBRI).toEqual({ status: 'loading' })
+  })
+})
+
+describe('evidenceBriefs', () => {
+  const brief: EvidenceBrief = {
+    ticker: 'BBRI',
+    signal: 'Unusual price-volume movement',
+    observed: ['o'],
+    compared: [],
+    interpreted: ['i'],
+    unknown: ['u'],
+    evidenceStrength: 'MODERATE',
+    researchPriority: 'HIGH',
+    generatedAt: at,
+    limitation: null,
+  }
+  const start = (state: AppState, ticker: string) => appReducer(state, { type: 'EVIDENCE_BRIEF_START', ticker })
+
+  it('marks one ticker as loading without touching challenges', () => {
+    const next = start(createInitialState(null), 'BBRI')
+    expect(next.evidenceBriefs).toEqual({ BBRI: { status: 'loading' } })
+    expect(next.challenges).toEqual({})
+  })
+
+  it('stores the brief for the ticker', () => {
+    const next = appReducer(start(createInitialState(null), 'BBRI'), {
+      type: 'EVIDENCE_BRIEF_SUCCESS',
+      ticker: 'BBRI',
+      result: brief,
+    })
+    expect(next.evidenceBriefs.BBRI).toEqual({ status: 'success', result: brief })
+  })
+
+  it('records an error and clears it when retried', () => {
+    const failed = appReducer(start(createInitialState(null), 'BBRI'), {
+      type: 'EVIDENCE_BRIEF_ERROR',
+      ticker: 'BBRI',
+      error: 'down',
+    })
+    expect(failed.evidenceBriefs.BBRI).toEqual({ status: 'error', error: 'down' })
+    expect(start(failed, 'BBRI').evidenceBriefs.BBRI).toEqual({ status: 'loading' })
   })
 })

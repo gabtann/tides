@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { toScanResult, toWatchlistItem } from './httpTidesApi'
 
-const at = '2026-09-28T10:00:00.000Z'
+const at = '2026-09-30T10:00:00.000Z'
 
 describe('toWatchlistItem', () => {
   it('renames backend fields', () => {
@@ -10,14 +10,38 @@ describe('toWatchlistItem', () => {
 })
 
 describe('toScanResult', () => {
-  it('merges signals per ticker and keeps scan errors', () => {
+  it('merges signals per ticker, keeps the highest backend priority and the scan errors', () => {
     const result = toScanResult({
       scanned_at: at,
       queue: [
-        { ticker: 'BBRI', type: 'PRICE_CHANGE', direction: 'UP', magnitude: '6.20%' },
-        { ticker: 'BBRI', type: 'VOLUME_SPIKE', magnitude: '2.3x average' },
-        { ticker: 'TLKM', type: 'NEAR_90D_LOW', magnitude: '3.0% of 90d range' },
-        { ticker: 'ASII', type: 'PRICE_CHANGE', direction: 'DOWN', magnitude: '-5.10%' },
+        {
+          ticker: 'BBRI',
+          type: 'PRICE_MOVEMENT',
+          priority: 'HIGH',
+          description: 'Significant daily price movement detected.',
+          details: { direction: 'UP', magnitude: 6.2 },
+        },
+        {
+          ticker: 'BBRI',
+          type: 'VOLUME_MOVEMENT',
+          priority: 'MEDIUM',
+          description: 'Trading volume significantly above average.',
+          details: { direction: 'UP', magnitude: 2.3 },
+        },
+        {
+          ticker: 'TLKM',
+          type: 'HISTORICAL_DEVIATION',
+          priority: 'MEDIUM',
+          description: 'Price is near 90-day low.',
+          details: { direction: 'LOW', magnitude: 3 },
+        },
+        {
+          ticker: 'ASII',
+          type: 'PRICE_MOVEMENT',
+          priority: 'HIGH',
+          description: 'Significant daily price movement detected.',
+          details: { direction: 'DOWN', magnitude: 5.1 },
+        },
       ],
       errors: [{ symbol: 'ZZZZ', message: 'Symbol not found on Sectors', code: 'NOT_FOUND' }],
     })
@@ -28,13 +52,33 @@ describe('toScanResult', () => {
         {
           ticker: 'BBRI',
           priority: 'HIGH',
-          reason: 'Price moved 6.20% in one day · Volume at 2.3x average',
+          reason: 'Price rose 6.2% in one day · Volume at 2.3x average',
           detectedAt: at,
         },
-        { ticker: 'TLKM', priority: 'LOW', reason: 'Near 90-day low (3.0% of 90d range)', detectedAt: at },
-        { ticker: 'ASII', priority: 'MEDIUM', reason: 'Price moved -5.10% in one day', detectedAt: at },
+        { ticker: 'TLKM', priority: 'MEDIUM', reason: 'Near 90-day low (3% of range)', detectedAt: at },
+        { ticker: 'ASII', priority: 'HIGH', reason: 'Price fell 5.1% in one day', detectedAt: at },
       ],
       errors: [{ ticker: 'ZZZZ', message: 'Symbol not found on Sectors' }],
     })
+  })
+
+  it('falls back to the backend description for an unknown signal type', () => {
+    const result = toScanResult({
+      scanned_at: at,
+      queue: [
+        {
+          ticker: 'BBCA',
+          type: 'PEER_DIVERGENCE',
+          priority: 'LOW',
+          description: 'Moved differently from sector peers.',
+          details: { magnitude: 1.5 },
+        },
+      ],
+      errors: [],
+    })
+
+    expect(result.signals).toEqual([
+      { ticker: 'BBCA', priority: 'LOW', reason: 'Moved differently from sector peers.', detectedAt: at },
+    ])
   })
 })

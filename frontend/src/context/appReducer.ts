@@ -1,4 +1,5 @@
 import type { ChallengeResult } from '../types/challenge'
+import type { EvidenceBrief } from '../types/evidenceBrief'
 import type { InvestigationResult } from '../types/investigation'
 import type { ScanResult } from '../types/signal'
 import type { Ticker } from '../types/ticker'
@@ -31,13 +32,21 @@ export interface ChallengeState {
   error?: string
 }
 
+export interface EvidenceBriefState {
+  status: LoadStatus
+  result?: EvidenceBrief
+  error?: string
+}
+
 export interface AppState {
   watchlist: WatchlistState
   scan: ScanState
   // Per ticker, hanya di memori: hasil investigasi tidak disimpan ke localStorage.
   investigations: Record<Ticker, InvestigationState>
-   // Sama seperti investigations: per ticker, hanya di memori. Evidence brief ikut di dalam ChallengeResult.
+  // Sama seperti investigations: per ticker, hanya di memori.
   challenges: Record<Ticker, ChallengeState>
+  // Evidence Brief dimuat sendiri (kontrak POST /api/agent/investigate), per ticker, hanya di memori.
+  evidenceBriefs: Record<Ticker, EvidenceBriefState>
 }
 
 export type AppAction =
@@ -56,6 +65,9 @@ export type AppAction =
   | { type: 'CHALLENGE_START'; ticker: Ticker }
   | { type: 'CHALLENGE_SUCCESS'; ticker: Ticker; result: ChallengeResult }
   | { type: 'CHALLENGE_ERROR'; ticker: Ticker; error: string }
+  | { type: 'EVIDENCE_BRIEF_START'; ticker: Ticker }
+  | { type: 'EVIDENCE_BRIEF_SUCCESS'; ticker: Ticker; result: EvidenceBrief }
+  | { type: 'EVIDENCE_BRIEF_ERROR'; ticker: Ticker; error: string }
 
 export function createInitialState(result: ScanResult | null): AppState {
   return {
@@ -63,6 +75,7 @@ export function createInitialState(result: ScanResult | null): AppState {
     scan: result ? { status: 'success', result } : { status: 'idle' },
     investigations: {},
     challenges: {},
+    evidenceBriefs: {},
   }
 }
 
@@ -104,6 +117,12 @@ export function appReducer(state: AppState, action: AppAction): AppState {
       return withChallenge(state, action.ticker, { status: 'success', result: action.result })
     case 'CHALLENGE_ERROR':
       return withChallenge(state, action.ticker, { status: 'error', error: action.error })
+    case 'EVIDENCE_BRIEF_START':
+      return withEvidenceBrief(state, action.ticker, { status: 'loading' })
+    case 'EVIDENCE_BRIEF_SUCCESS':
+      return withEvidenceBrief(state, action.ticker, { status: 'success', result: action.result })
+    case 'EVIDENCE_BRIEF_ERROR':
+      return withEvidenceBrief(state, action.ticker, { status: 'error', error: action.error })
   }
 }
 
@@ -113,4 +132,8 @@ function withInvestigation(state: AppState, ticker: Ticker, investigation: Inves
 
 function withChallenge(state: AppState, ticker: Ticker, challenge: ChallengeState): AppState {
   return { ...state, challenges: { ...state.challenges, [ticker]: challenge } }
+}
+
+function withEvidenceBrief(state: AppState, ticker: Ticker, evidenceBrief: EvidenceBriefState): AppState {
+  return { ...state, evidenceBriefs: { ...state.evidenceBriefs, [ticker]: evidenceBrief } }
 }

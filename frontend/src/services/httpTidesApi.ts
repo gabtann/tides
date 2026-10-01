@@ -49,11 +49,13 @@ export function toWatchlistItem(entry: BackendWatchlistEntry): WatchlistItem {
   return { ticker: entry.symbol, addedAt: entry.added_at }
 }
 
+// Bentuk item queue dari POST /api/scan (backend signal-engine.service.js).
 interface BackendSignal {
   ticker: string
-  type: string // PRICE_CHANGE | VOLUME_SPIKE | NEAR_90D_HIGH | NEAR_90D_LOW
-  direction?: 'UP' | 'DOWN'
-  magnitude: string
+  type: string // PRICE_MOVEMENT | VOLUME_MOVEMENT | HISTORICAL_DEVIATION | PEER_DIVERGENCE
+  priority: ResearchPriority
+  description: string
+  details: { direction?: 'UP' | 'DOWN' | 'HIGH' | 'LOW'; magnitude: number }
 }
 
 interface BackendScanResult {
@@ -62,34 +64,23 @@ interface BackendScanResult {
   errors: { symbol: string; message: string; code: string }[]
 }
 
-// SEMENTARA sampai P0 diputuskan: backend belum mengirim priority dan reason.
-const SIGNAL_PRIORITY: Record<string, ResearchPriority> = {
-  PRICE_CHANGE: 'MEDIUM',
-  VOLUME_SPIKE: 'MEDIUM',
-  NEAR_90D_HIGH: 'LOW',
-  NEAR_90D_LOW: 'LOW',
-}
-
-function describeSignal(signal: BackendSignal): string {
-  switch (signal.type) {
-    case 'PRICE_CHANGE':
-      return `Price moved ${signal.magnitude} in one day`
-    case 'VOLUME_SPIKE':
-      return `Volume at ${signal.magnitude}`
-    case 'NEAR_90D_HIGH':
-      return `Near 90-day high (${signal.magnitude})`
-    case 'NEAR_90D_LOW':
-      return `Near 90-day low (${signal.magnitude})`
+// Kalimat reason disusun dari details; tipe yang belum dikenal memakai description dari backend.
+function describeSignal({ type, details, description }: BackendSignal): string {
+  switch (type) {
+    case 'PRICE_MOVEMENT':
+      return `Price ${details.direction === 'DOWN' ? 'fell' : 'rose'} ${details.magnitude}% in one day`
+    case 'VOLUME_MOVEMENT':
+      return `Volume at ${details.magnitude}x average`
+    case 'HISTORICAL_DEVIATION':
+      return `Near 90-day ${details.direction === 'LOW' ? 'low' : 'high'} (${details.magnitude}% of range)`
     default:
-      return signal.type
+      return description
   }
 }
 
-// Beberapa signal di satu ticker berarti pergerakan yang saling menguatkan, jadi dinaikkan ke HIGH.
+// Satu ticker bisa punya beberapa signal; kartu memakai priority tertinggi yang dikirim backend.
 function priorityFor(group: BackendSignal[]): ResearchPriority {
-  if (group.length > 1) return 'HIGH'
-  const own = group.map((signal) => SIGNAL_PRIORITY[signal.type] ?? 'LOW')
-  return PRIORITY_ORDER.find((priority) => own.includes(priority)) ?? 'LOW'
+  return PRIORITY_ORDER.find((priority) => group.some((signal) => signal.priority === priority)) ?? 'LOW'
 }
 
 // Backend bisa mengirim beberapa signal untuk satu ticker; frontend memakai satu Signal per ticker.
@@ -115,7 +106,7 @@ export function toScanResult(raw: BackendScanResult): ScanResult {
   }
 }
 
-// Backend belum punya /investigate dan /challenge (K7), jadi sementara dipinjam dari mock.
+// Sementara dipinjam dari mock: /challenge belum ada (K17), dan /agent/investigate belum mengembalikan Evidence Brief (K39).
 const notYetInBackend = createMockTidesApi()
 
 export const httpTidesApi: TidesApi = {
@@ -145,6 +136,8 @@ export const httpTidesApi: TidesApi = {
     return toScanResult(await request<BackendScanResult>('/scan', { method: 'POST' }))
   },
 
+  
   investigate: (ticker) => notYetInBackend.investigate(ticker),
   challenge: (ticker) => notYetInBackend.challenge(ticker),
+  getEvidenceBrief: (ticker) => notYetInBackend.getEvidenceBrief(ticker),
 }

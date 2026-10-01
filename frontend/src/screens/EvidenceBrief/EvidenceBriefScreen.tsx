@@ -1,8 +1,13 @@
+import { useEffect, useRef } from 'react'
 import { Link, useParams } from 'react-router'
 import { BackLink } from '../../components/BackLink'
+import { Button } from '../../components/Button'
+import { ErrorState } from '../../components/ErrorState'
+import { LoadingState } from '../../components/LoadingState'
 import { PriorityBadge } from '../../components/PriorityBadge'
 import { StrengthIndicator } from '../../components/StrengthIndicator'
-import { useAppState } from '../../context/stateContext'
+import { EVIDENCE_BRIEF_ERROR_MESSAGE, useEvidenceBrief } from '../../hooks/useEvidenceBrief'
+import type { EvidenceBrief } from '../../types/evidenceBrief'
 
 type SectionKey = 'observed' | 'compared' | 'interpreted' | 'unknown'
 
@@ -14,27 +19,22 @@ const SECTIONS: { key: SectionKey; label: string; border: string }[] = [
   { key: 'unknown', label: 'Unknown', border: 'border-l-medium' },
 ]
 
+const headingClass = 'font-display text-[18px] leading-[24px] font-semibold'
 const generatedAtFormat = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
 const linkClass = 'rounded text-link hover:underline hover:underline-offset-4'
 
-// Brief ikut di ChallengeResult, jadi layar ini hanya membaca context dan tidak memanggil API.
 export function EvidenceBriefScreen() {
   const ticker = (useParams().ticker ?? '').toUpperCase()
-  const { state } = useAppState()
-  const brief = state.challenges[ticker]?.result?.brief
+  const { status, result, error, start } = useEvidenceBrief(ticker)
 
-  if (!brief) {
-    return (
-      <section>
-        <p className="max-w-[60ch] text-muted">
-          The evidence brief for {ticker} isn't ready. Run the challenge first to build it.
-        </p>
-        <Link to={`/challenge/${ticker}`} className={`mt-3 inline-block ${linkClass}`}>
-          Go to challenge
-        </Link>
-      </section>
-    )
-  }
+  // Brief dimuat sendiri (kontrak POST /api/agent/investigate), jadi layar ini langsung mulai seperti Investigation.
+  // Ref mencegah panggilan kedua dari effect ganda StrictMode.
+  const autoStarted = useRef<string | null>(null)
+  useEffect(() => {
+    if (status !== 'idle' || autoStarted.current === ticker) return
+    autoStarted.current = ticker
+    void start()
+  }, [status, ticker, start])
 
   return (
     <section>
@@ -42,18 +42,61 @@ export function EvidenceBriefScreen() {
       <h1 className="mt-3 font-display text-[28px] leading-[34px] font-semibold">Evidence Brief</h1>
       <p className="mt-2 font-semibold tabular-nums">{ticker}</p>
 
-      <div className="mt-6 space-y-6">
-        {SECTIONS.map((section) => (
-          <section key={section.key} aria-labelledby={`brief-${section.key}`} className={`border-l-2 pl-3 ${section.border}`}>
-            <h2 id={`brief-${section.key}`} className="font-display text-[18px] leading-[24px] font-semibold">
-              {section.label}
-            </h2>
-            <p className="mt-1 max-w-[60ch]">{brief[section.key]}</p>
-          </section>
-        ))}
+      <div className="mt-6">
+        {(status === 'idle' || status === 'loading') && (
+          <LoadingState message={`Building the evidence brief for ${ticker}…`} />
+        )}
+
+        {status === 'error' && (
+          <ErrorState message={error ?? EVIDENCE_BRIEF_ERROR_MESSAGE}>
+            <Button onClick={() => void start()}>Retry</Button>
+          </ErrorState>
+        )}
+
+        {result && <BriefContent brief={result} />}
       </div>
 
-      <dl className="mt-8 space-y-3">
+      <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
+        <Link to="/queue" className={linkClass}>
+          Investigate another ticker
+        </Link>
+        <Link to="/" className={linkClass}>
+          Back to watchlist
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+// Prinsip kontrak: bukti yang tidak ada harus tetap terlihat, jadi field kosong diberi keterangan, bukan disembunyikan.
+function BriefContent({ brief }: { brief: EvidenceBrief }) {
+  return (
+    <div className="space-y-6">
+      <section aria-labelledby="brief-signal">
+        <h2 id="brief-signal" className={headingClass}>
+          Signal
+        </h2>
+        <p className="mt-1 max-w-[60ch]">{brief.signal ?? 'No signal description was provided.'}</p>
+      </section>
+
+      {SECTIONS.map((section) => (
+        <section key={section.key} aria-labelledby={`brief-${section.key}`} className={`border-l-2 pl-3 ${section.border}`}>
+          <h2 id={`brief-${section.key}`} className={headingClass}>
+            {section.label}
+          </h2>
+          {brief[section.key].length > 0 ? (
+            <ul className="mt-1 max-w-[60ch] list-disc space-y-1 pl-5">
+              {brief[section.key].map((point) => (
+                <li key={point}>{point}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-muted">No evidence available for this section.</p>
+          )}
+        </section>
+      ))}
+
+      <dl className="space-y-3">
         <div className="flex items-center justify-between gap-4">
           <dt className="text-muted">Evidence strength</dt>
           <dd>
@@ -68,21 +111,21 @@ export function EvidenceBriefScreen() {
         </div>
       </dl>
 
-      <p className="mt-6 border-l-2 border-l-line pl-3 text-[13px] leading-[18px] text-muted">
-        Research priority is not an investment recommendation. The final judgment is yours.
-      </p>
-      <p className="mt-2 text-[13px] leading-[18px] text-muted">
-        Generated {generatedAtFormat.format(new Date(brief.generatedAt))}
-      </p>
+      <section aria-labelledby="brief-limitation">
+        <h2 id="brief-limitation" className={headingClass}>
+          Limitation
+        </h2>
+        <p className="mt-1 max-w-[60ch]">{brief.limitation ?? 'No limitation was reported.'}</p>
+      </section>
 
-      <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3">
-        <Link to="/queue" className={linkClass}>
-          Investigate another ticker
-        </Link>
-        <Link to="/" className={linkClass}>
-          Back to watchlist
-        </Link>
+      <div>
+        <p className="border-l-2 border-l-line pl-3 text-[13px] leading-[18px] text-muted">
+          Research priority is not an investment recommendation. The final judgment is yours.
+        </p>
+        <p className="mt-2 text-[13px] leading-[18px] text-muted">
+          Generated {generatedAtFormat.format(new Date(brief.generatedAt))}
+        </p>
       </div>
-    </section>
+    </div>
   )
 }
