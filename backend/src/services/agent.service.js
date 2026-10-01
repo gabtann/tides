@@ -2,6 +2,9 @@
 /**
  * Investigation service implementing the POST /api/agent/investigate logic.
  * It follows the three cases described in the task specification.
+ *
+ * Flow: assemble Agent Input payload → send to AI Agent via runAgent() →
+ *       normalize response via buildEvidenceBrief() → return Evidence Brief.
  */
 import { normalizeTicker } from "../utils/ticker.js";
 import { getOverview, getDailyHistory, getPeers } from "../integration/sectors.client.js";
@@ -9,6 +12,8 @@ import { normalizeOverview, normalizeDailyHistory, normalizePeers } from "../ser
 import { runSignalEngine } from "./signal-engine.service.js";
 import { selectTopSignal } from "../utils/priority.js";
 import { buildAgentPayload } from "./agent-payload.service.js";
+import { runAgent } from "../integration/agent.client.js";
+import { buildEvidenceBrief } from "./evidence.service.js";
 
 export async function investigate(body) {
   // 1. Validate ticker
@@ -34,37 +39,43 @@ export async function investigate(body) {
     };
   };
 
+  let agentInputPayload;
+
   // Case 1: both signal and currentContext provided
   if (body.signal && body.currentContext) {
-    return buildAgentPayload(ticker, body.signal, body.currentContext);
+    agentInputPayload = buildAgentPayload(ticker, body.signal, body.currentContext);
   }
-
   // Case 2: signal present, but currentContext missing → live fetch only currentContext
-  if (body.signal && !body.currentContext) {
+  else if (body.signal && !body.currentContext) {
     const currentContext = await fetchCurrentContext();
-    return buildAgentPayload(ticker, body.signal, currentContext);
+    agentInputPayload = buildAgentPayload(ticker, body.signal, currentContext);
   }
-
   // Case 3: fallback – no signal supplied
   // Live fetch full data, run signal engine, pick top priority signal
-  const [overview, historyRaw, peersRaw] = await Promise.all([
-    getOverview(ticker),
-    getDailyHistory(ticker),
-    getPeers(ticker),
-  ]);
-  const normalizedCurrent = normalizeOverview(overview);
-  const normalizedHistory = normalizeDailyHistory(historyRaw);
-  const normalizedPeers = normalizePeers(peersRaw);
+  else {
+    const [overview, historyRaw, peersRaw] = await Promise.all([
+      getOverview(ticker),
+      getDailyHistory(ticker),
+      getPeers(ticker),
+    ]);
+    const normalizedCurrent = normalizeOverview(overview);
+    const normalizedHistory = normalizeDailyHistory(historyRaw);
+    const normalizedPeers = normalizePeers(peersRaw);
 
-  const signals = runSignalEngine(ticker, normalizedCurrent, normalizedHistory, normalizedPeers);
-  const topSignal = selectTopSignal(signals);
-  if (!topSignal) {
-    const err = new Error("No signal found");
-    err.status = 404;
-    err.code = "NO_SIGNAL_FOUND";
-    throw err;
+    const signals = runSignalEngine(ticker, normalizedCurrent, normalizedHistory, normalizedPeers);
+    const topSignal = selectTopSignal(signals);
+    if (!topSignal) {
+      const err = new Error("No signal found");
+      err.status = 404;
+      err.code = "NO_SIGNAL_FOUND";
+      throw err;
+    }
+
+    const currentContext = await fetchCurrentContext();
+    agentInputPayload = buildAgentPayload(ticker, topSignal, currentContext);
   }
 
-  const currentContext = await fetchCurrentContext();
-  return buildAgentPayload(ticker, topSignal, currentContext);
+  // Send to AI Agent and normalize the response
+  const agentRawResponse = await runAgent(agentInputPayload);
+  return buildEvidenceBrief(agentRawResponse);
 }

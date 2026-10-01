@@ -6,6 +6,7 @@ async function runAgent(input) {
   if (!config.agentBaseUrl) {
     const error = new Error("Agent service is not configured");
     error.code = "AGENT_NOT_CONFIGURED";
+    error.status = 500;
     throw error;
   }
 
@@ -25,7 +26,7 @@ async function runAgent(input) {
     if (!response.ok) {
       const error = new Error(`Agent service returned HTTP ${response.status}`);
       error.code = "AGENT_REQUEST_FAILED";
-      error.status = response.status;
+      error.status = 502;
       throw error;
     }
 
@@ -34,10 +35,18 @@ async function runAgent(input) {
     if (error.name === "AbortError") {
       const timeoutError = new Error("Agent service request timed out");
       timeoutError.code = "AGENT_TIMEOUT";
+      timeoutError.status = 504;
       throw timeoutError;
     }
 
-    throw error;
+    // Re-throw errors that already have a code (e.g. AGENT_REQUEST_FAILED from non-2xx)
+    if (error.code) throw error;
+
+    // Network-level failures (DNS, connection refused) — contract has no separate code
+    const netErr = new Error(`Agent service unreachable: ${error.message}`);
+    netErr.code = "AGENT_REQUEST_FAILED";
+    netErr.status = 502;
+    throw netErr;
   } finally {
     clearTimeout(timeout);
   }
