@@ -1,3 +1,4 @@
+import type {EvidenceBrief} from '../types/evidenceBrief'
 import type { ContextBlock } from '../types/investigation'
 import type { ResearchPriority } from '../types/priority'
 import type { Signal } from '../types/signal'
@@ -62,6 +63,39 @@ function block(label: string, summary: string, dataPoints: ContextBlock['dataPoi
   return { label, summary, dataPoints }
 }
 
+// Struktur mengikuti kontrak EvidenceBrief. Ticker tanpa signal (misalnya UNVR) sengaja menghasilkan
+// section kosong dan signal null, supaya tampilan kosong bisa dicek saat pengembangan UI.
+export function mockEvidenceBrief(ticker: Ticker): EvidenceBrief {
+  const signal = mockSignalFor(ticker)
+  const base = {
+    ticker,
+    generatedAt: new Date().toISOString(),
+    limitation: 'Peer comparison uses sector averages; individual peer data was not retrieved.',
+  }
+  if (!signal) {
+    return {
+      ...base,
+      signal: null,
+      observed: [],
+      compared: [],
+      interpreted: [],
+      unknown: ['No signal was detected for this ticker in the latest scan.'],
+      evidenceStrength: 'WEAK',
+      researchPriority: 'LOW',
+    }
+  }
+  return {
+    ...base,
+    signal: signal.reason,
+    observed: [`${ticker} rose 6.2% over 5 days on 2.4x its 20-day average volume.`],
+    compared: ['Sector peers rose 1.1% over the same period.'],
+    interpreted: ['Part of the move is specific to this stock, part follows the sector.'],
+    unknown: ['The data does not show what caused the extra volume.'],
+    evidenceStrength: 'MODERATE',
+    researchPriority: signal.priority,
+  }
+}
+
 export function createMockTidesApi(options: { delayMs?: number | (() => number) } = {}): TidesApi {
   const { delayMs = randomDelay } = options
   const wait = () =>
@@ -119,23 +153,17 @@ export function createMockTidesApi(options: { delayMs?: number | (() => number) 
 
     async challenge(ticker) {
       await wait()
-      const now = new Date().toISOString()
       return {
         ticker,
         initialSignal: `${ticker} showed an unusual price-volume movement.`,
         challengeFinding: 'Peer stocks showed a smaller, similar movement.',
         signalStrength: 'MODERATE',
-        brief: {
-          ticker,
-          observed: `${ticker} rose 6.2% over 5 days on 2.4x its 20-day average volume.`,
-          compared: 'The move is in the 92nd percentile of its 1-year range; peers rose 1.1%.',
-          interpreted: 'Part of the move is specific to this stock, part follows the sector.',
-          unknown: 'The data does not show what caused the extra volume.',
-          evidenceStrength: 'MODERATE',
-          researchPriority: mockSignalFor(ticker)?.priority ?? 'LOW',
-          generatedAt: now,
-        },
       }
+    },
+
+     async getEvidenceBrief(ticker) {
+      await wait()
+      return mockEvidenceBrief(ticker)
     },
   }
 }
