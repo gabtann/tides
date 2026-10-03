@@ -38,12 +38,12 @@ const mockSignal = {
   type: 'PRICE_MOVEMENT',
   priority: 'HIGH',
   description: 'Price moved up',
-  details: { direction: 'UP', magnitude: 0.062 }
+  details: { direction: 'UP', magnitude: 6.2 } // <--- KEMBALIKAN KE 6.2
 };
 
 const fullContext = {
   currentPrice: 8500,
-  dailyChange: 0.062,
+  dailyChange: 0.062, // <--- BIARKAN TETAP 0.062
   latestDate: '2026-09-26',
   sector: 'Financials',
   industry: 'Banks'
@@ -160,7 +160,7 @@ describe('investigate service', () => {
 
     // 2. Agent was called with correct payload
     assert.ok(capturedAgentBody, 'runAgent must have been called');
-    assertAgentInputPayload(capturedAgentBody, 0.062, 0.062);
+    assertAgentInputPayload(capturedAgentBody, 0.062, 6.2);
   });
 
   // ── Case 2: Signal only ────────────────────────────────────────────────
@@ -178,7 +178,7 @@ describe('investigate service', () => {
     // signal comes from body (same mockSignal), currentContext from live fetch
     assert.equal(capturedAgentBody.signal.type, 'PRICE_MOVEMENT');
     assert.equal(capturedAgentBody.signal.priority, 'HIGH');
-    assert.equal(capturedAgentBody.signal.details.magnitude, 0.062);
+    assert.equal(capturedAgentBody.signal.details.magnitude, 6.2);
     assert.deepEqual(capturedAgentBody.availableTools, ['getOverview', 'getHistorical', 'getPeers']);
     assert.ok(capturedAgentBody.currentContext, 'currentContext must be enriched from Sectors');
     assert.equal(typeof capturedAgentBody.currentContext.dailyChange, 'number');
