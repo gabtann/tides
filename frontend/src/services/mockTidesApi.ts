@@ -1,4 +1,4 @@
-import type {EvidenceBrief} from '../types/evidenceBrief'
+import { Confidence, SignalType, type EvidenceBrief } from '../types/evidenceBrief'
 import type { ContextBlock } from '../types/investigation'
 import type { ResearchPriority } from '../types/priority'
 import type { Signal } from '../types/signal'
@@ -84,7 +84,7 @@ export function mockEvidenceBrief(ticker: Ticker): EvidenceBrief {
       researchPriority: 'LOW',
     }
   }
-  return {
+  const brief: EvidenceBrief = {
     ...base,
     signal: signal.reason,
     observed: [`${ticker} rose 6.2% over 5 days on 2.4x its 20-day average volume.`],
@@ -94,6 +94,21 @@ export function mockEvidenceBrief(ticker: Ticker): EvidenceBrief {
     evidenceStrength: 'MODERATE',
     researchPriority: signal.priority,
   }
+
+  // CP4.5: Tambahkan Challenge fields untuk BBCA/GOTO guna verifikasi CP4.5 tanpa merusak baseline CP3 pada BBRI
+  if (ticker === 'BBCA' || ticker === 'GOTO') {
+    brief.signalType = SignalType.PRICE_MOVEMENT
+    brief.challengeStatus = 'SUPPORTED'
+    brief.confidence = Confidence.MODERATE
+    brief.challenge = {
+      supporting: [`Volume increase for ${ticker} was confirmed across 3 consecutive trading sessions.`],
+      contradicting: ['Sector peer performance was flat during the same window.'],
+      alternativeExplanations: ['Broader market index rebalancing occurred on the same date.'],
+      unknown: ['Foreign institutional net flow breakdown is not available in the current dataset.'],
+    }
+  }
+
+  return brief
 }
 
 export function createMockTidesApi(options: { delayMs?: number | (() => number) } = {}): TidesApi {

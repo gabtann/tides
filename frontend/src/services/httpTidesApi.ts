@@ -1,3 +1,4 @@
+import type { EvidenceBrief } from '../types/evidenceBrief'
 import type { ResearchPriority } from '../types/priority'
 import type { ScanResult, Signal } from '../types/signal'
 import type { WatchlistItem } from '../types/watchlist'
@@ -139,5 +140,10 @@ export const httpTidesApi: TidesApi = {
   
   investigate: (ticker) => notYetInBackend.investigate(ticker),
   challenge: (ticker) => notYetInBackend.challenge(ticker),
-  getEvidenceBrief: (ticker) => notYetInBackend.getEvidenceBrief(ticker),
+  async getEvidenceBrief(ticker) {
+    return await request<EvidenceBrief>('/agent/investigate', {
+      method: 'POST',
+      body: JSON.stringify({ ticker }),
+    })
+  },
 }
