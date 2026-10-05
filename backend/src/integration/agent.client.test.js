@@ -98,7 +98,7 @@ describe('agent.client — AGENT_REQUEST_FAILED', () => {
         () => runAgent({ ticker: 'BBCA' }),
         (err) => {
           assert.equal(err.code, 'AGENT_REQUEST_FAILED');
-          assert.equal(err.status, 500);
+          assert.equal(err.status, 502);
           return true;
         }
       );
@@ -126,7 +126,7 @@ describe('agent.client — AGENT_REQUEST_FAILED', () => {
         () => runAgent({ ticker: 'BBCA' }),
         (err) => {
           assert.equal(err.code, 'AGENT_REQUEST_FAILED');
-          assert.equal(err.status, 503);
+          assert.equal(err.status, 502);
           return true;
         }
       );

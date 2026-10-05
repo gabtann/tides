@@ -201,6 +201,45 @@ describe('normalizeDailyHistory', () => {
     assert.equal(result[0].date, null);
     assert.equal(result[0].close, null);
   });
+
+  test('handles null records inside the array', () => {
+    const result = normalizeDailyHistory([null]);
+
+    assert.deepEqual(result, [
+      {
+        ticker: null,
+        date: null,
+        open: null,
+        high: null,
+        low: null,
+        close: null,
+        volume: null,
+        market_cap: null,
+      },
+    ]);
+  });
+
+  test('preserves the input order of historical records', () => {
+    const raw = [
+      {
+        symbol: 'BBCA.JK',
+        date: '2026-09-23',
+        close: 6350,
+      },
+      {
+        symbol: 'BBCA.JK',
+        date: '2026-09-22',
+        close: 6300,
+      },
+    ];
+
+    const result = normalizeDailyHistory(raw);
+
+    assert.deepEqual(
+      result.map((item) => item.date),
+      ['2026-09-23', '2026-09-22']
+    );
+  });
 });
 
 // ============================================================
@@ -259,5 +298,19 @@ describe('normalizePeers', () => {
     assert.equal(result[0].ticker, null);
     assert.equal(result[0].pb, null);
     assert.equal(result[0].pe, null);
+  });
+
+  test('returns empty array when companies is not an array', () => {
+    const raw = {
+      peers: [
+        {
+          peers_data: {
+            companies: {},
+          },
+        },
+      ],
+    };
+
+    assert.deepEqual(normalizePeers(raw, 'BBCA'), []);
   });
 });
