@@ -77,6 +77,8 @@ export function normalizePeers(raw, queryTicker) {
   const companies = raw?.peers?.[0]?.peers_data?.companies ?? [];
   const selfTicker = normalizeTicker(queryTicker);
 
+  if (!Array.isArray(companies)) return [];
+
   return companies
     .map((p) => ({
       ticker: normalizeTicker(p?.symbol),

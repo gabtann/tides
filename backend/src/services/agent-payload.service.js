@@ -10,12 +10,11 @@ export const AVAILABLE_TOOLS = ["getOverview", "getHistorical", "getPeers"];
  * or a pre‑built currentContext object (fields: currentPrice, dailyChange, latestDate, sector, industry).
  * Returns an object with fields:
  *   - currentPrice
- *   - dailyChange (percent number)
+ *   - dailyChange (decimal number, e.g. 0.062)
  *   - latestDate
  *   - sector
  *   - industry
  */
-import { toPercent } from "../utils/format.js";
 export function buildCurrentContext(current) {
   if (!current) return null;
   // If already in target shape, just return it (ensuring dailyChange is number)
@@ -38,7 +37,7 @@ export function buildCurrentContext(current) {
   } = current;
   return {
     currentPrice: price,
-    dailyChange: toPercent(daily_price_change),
+    dailyChange: Number(daily_price_change),
     latestDate: price_date,
     sector,
     industry,
