@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MOCK_WATCHLIST_KEY, createMockTidesApi, mockSignalFor } from './mockTidesApi'
+import { MOCK_WATCHLIST_KEY, createMockTidesApi, mockEvidenceBrief, mockSignalFor } from './mockTidesApi'
 
 const api = createMockTidesApi({ delayMs: 0 })
 
@@ -18,6 +18,26 @@ describe('mockSignalFor', () => {
     expect(mockSignalFor('AAAB')?.priority).toBe('MEDIUM') // 261 % 4 = 1
     expect(mockSignalFor('AAAC')?.priority).toBe('LOW') // 262 % 4 = 2
     expect(mockSignalFor('AAAD')).toBeNull() // 263 % 4 = 3
+  })
+})
+
+describe('mockEvidenceBrief', () => {
+  it('follows the Evidence Brief contract', () => {
+    const brief = mockEvidenceBrief('BBRI')
+    expect(brief.signal).toBe('Unusual price-volume movement')
+    expect(brief.observed).toEqual([expect.any(String)])
+    expect(brief.limitation).toEqual(expect.any(String))
+    expect(brief.evidenceStrength).toBe('MODERATE')
+    expect(brief.researchPriority).toBe('HIGH')
+  })
+
+  it('leaves the sections empty and the signal null when the ticker has no signal', () => {
+    const brief = mockEvidenceBrief('UNVR')
+    expect(brief.signal).toBeNull()
+    expect(brief.observed).toEqual([])
+    expect(brief.compared).toEqual([])
+    expect(brief.interpreted).toEqual([])
+    expect(brief.evidenceStrength).toBe('WEAK')
   })
 })
 
@@ -88,10 +108,16 @@ describe('mock scan and research', () => {
     expect(result.fundamentalContext.label).toBe('Fundamental context')
   })
 
-  it('includes the evidence brief in the challenge result', async () => {
+  it('returns the challenge result for the ticker', async () => {
     const result = await api.challenge('BBRI')
-    expect(result.brief.ticker).toBe('BBRI')
-    expect(result.brief.researchPriority).toBe('HIGH')
+    expect(result.ticker).toBe('BBRI')
     expect(['STRONG', 'MODERATE', 'WEAK']).toContain(result.signalStrength)
+  })
+
+  it('returns an Evidence Brief for the ticker', async () => {
+    const brief = await api.getEvidenceBrief('BBRI')
+    expect(brief.ticker).toBe('BBRI')
+    expect(brief.signal).toBe('Unusual price-volume movement')
+    expect(brief.observed.length).toBeGreaterThan(0)
   })
 })

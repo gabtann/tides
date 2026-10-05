@@ -1,4 +1,5 @@
 import type { ChallengeResult } from '../types/challenge'
+import type { EvidenceBrief } from '../types/evidenceBrief'
 import type { InvestigationResult } from '../types/investigation'
 import type { ScanResult } from '../types/signal'
 import type { Ticker } from '../types/ticker'
@@ -13,4 +14,7 @@ export interface TidesApi {
   scanWatchlist(): Promise<ScanResult>
   investigate(ticker: Ticker): Promise<InvestigationResult>
   challenge(ticker: Ticker): Promise<ChallengeResult>
+   // Evidence Brief mengikuti kontrak POST /api/agent/investigate.
+  getEvidenceBrief(ticker: Ticker): Promise<EvidenceBrief>
+
 }
