@@ -7,7 +7,7 @@ import { LoadingState } from '../../components/LoadingState'
 import { PriorityBadge } from '../../components/PriorityBadge'
 import { StrengthIndicator } from '../../components/StrengthIndicator'
 import { EVIDENCE_BRIEF_ERROR_MESSAGE, useEvidenceBrief } from '../../hooks/useEvidenceBrief'
-import type { EvidenceBrief } from '../../types/evidenceBrief'
+import type { ChallengeDetails, ChallengeStatus, EvidenceBrief } from '../../types/evidenceBrief'
 
 type SectionKey = 'observed' | 'compared' | 'interpreted' | 'unknown'
 
@@ -17,6 +17,24 @@ const SECTIONS: { key: SectionKey; label: string; border: string }[] = [
   { key: 'compared', label: 'Compared', border: 'border-l-link' },
   { key: 'interpreted', label: 'Interpreted', border: 'border-l-brand' },
   { key: 'unknown', label: 'Unknown', border: 'border-l-medium' },
+]
+
+const CHALLENGE_STATUS_STYLE: Record<ChallengeStatus, string> = {
+  SUPPORTED: 'bg-low/20 text-low border border-low/40',
+  WEAKENED: 'bg-medium/20 text-medium border border-medium/40',
+  CONTRADICTED: 'bg-high/20 text-high border border-high/40',
+  INCONCLUSIVE: 'bg-surface text-muted border border-line',
+}
+
+const CHALLENGE_QUADRANTS: {
+  key: keyof ChallengeDetails
+  label: string
+  border: string
+}[] = [
+  { key: 'supporting', label: 'Supporting Evidence', border: 'border-l-low' },
+  { key: 'contradicting', label: 'Contradicting Evidence', border: 'border-l-high' },
+  { key: 'alternativeExplanations', label: 'Alternative Explanations', border: 'border-l-brand' },
+  { key: 'unknown', label: 'Unknowns', border: 'border-l-medium' },
 ]
 
 const headingClass = 'font-display text-[18px] leading-[24px] font-semibold'
@@ -68,6 +86,66 @@ export function EvidenceBriefScreen() {
   )
 }
 
+function ChallengeSection({ brief }: { brief: EvidenceBrief }) {
+  if (!brief.challenge) return null
+
+  return (
+    <section
+      aria-labelledby="brief-challenge"
+      className="space-y-4 rounded-xl border border-line bg-surface p-4 text-fg"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
+        <div>
+          <h2 id="brief-challenge" className={headingClass}>
+            Challenge Signal
+          </h2>
+          {brief.signalType && (
+            <p className="mt-0.5 text-[13px] text-muted">
+              Signal type: <span className="font-mono text-fg">{brief.signalType}</span>
+            </p>
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          {brief.challengeStatus && (
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${
+                CHALLENGE_STATUS_STYLE[brief.challengeStatus] ?? 'border border-line bg-surface text-muted'
+              }`}
+            >
+              {brief.challengeStatus}
+            </span>
+          )}
+          {brief.confidence && (
+            <span className="inline-flex items-center rounded-full border border-line bg-canvas/60 px-2.5 py-0.5 text-[12px] text-muted">
+              Confidence: <span className="ml-1 font-semibold text-fg">{brief.confidence}</span>
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {CHALLENGE_QUADRANTS.map((quadrant) => {
+          const items = brief.challenge?.[quadrant.key] ?? []
+          return (
+            <div key={quadrant.key} className={`border-l-2 pl-3 ${quadrant.border}`}>
+              <h3 className="text-[14px] font-semibold text-fg">{quadrant.label}</h3>
+              {items.length > 0 ? (
+                <ul className="mt-1 list-disc space-y-1 pl-4 text-[14px]">
+                  {items.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-1 text-[14px] text-muted">None identified.</p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 // Prinsip kontrak: bukti yang tidak ada harus tetap terlihat, jadi field kosong diberi keterangan, bukan disembunyikan.
 function BriefContent({ brief }: { brief: EvidenceBrief }) {
   return (
@@ -78,6 +156,8 @@ function BriefContent({ brief }: { brief: EvidenceBrief }) {
         </h2>
         <p className="mt-1 max-w-[60ch]">{brief.signal ?? 'No signal description was provided.'}</p>
       </section>
+
+      {brief.challenge && <ChallengeSection brief={brief} />}
 
       {SECTIONS.map((section) => (
         <section key={section.key} aria-labelledby={`brief-${section.key}`} className={`border-l-2 pl-3 ${section.border}`}>
