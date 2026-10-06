@@ -70,7 +70,8 @@ export function buildEvidenceBrief(agentResult) {
   const evidenceStrength = normalizeStrength(agentResult.evidenceStrength);
   const researchPriority = normalizePriority(agentResult.researchPriority, evidenceStrength);
 
-  return {
+  // CP3 Evidence Brief fields — contract unchanged
+  const brief = {
     ticker: agentResult.ticker || null,
     signal: agentResult.signal || null,
     observed: toArray(agentResult.observed),
@@ -82,4 +83,21 @@ export function buildEvidenceBrief(agentResult) {
     generatedAt: agentResult.generatedAt ?? new Date().toISOString(),
     limitation: agentResult.limitation || null,
   };
+
+  // CP4 Challenge Signal fields — pass-through, only if present in agent response.
+  // No defaults are created; if Agent omits these, they stay absent from the output.
+  if (agentResult.signalType !== undefined) {
+    brief.signalType = agentResult.signalType;
+  }
+  if (agentResult.challenge !== undefined) {
+    brief.challenge = agentResult.challenge;
+  }
+  if (agentResult.challengeStatus !== undefined) {
+    brief.challengeStatus = agentResult.challengeStatus;
+  }
+  if (agentResult.confidence !== undefined) {
+    brief.confidence = agentResult.confidence;
+  }
+
+  return brief;
 }

@@ -1,6 +1,6 @@
 /**
  * Unit tests untuk services/evidence.service.js
- * Menggunakan Node.js built-in test runner (node:test) — tidak perlu dependency tambahan.
+ * Menggunakan Node.js built-in test runner (node:test) â€” tidak perlu dependency tambahan.
  * Jalankan: node --test src/services/evidence.service.test.js
  */
 
@@ -32,7 +32,7 @@ function makeAgentResult(overrides = {}) {
 // evidenceStrength normalization
 // ============================================================
 
-describe('buildEvidenceBrief — evidenceStrength', () => {
+describe('buildEvidenceBrief â€” evidenceStrength', () => {
   test('passes through STRONG unchanged', () => {
     const result = buildEvidenceBrief(makeAgentResult({ evidenceStrength: 'STRONG' }));
     assert.equal(result.evidenceStrength, 'STRONG');
@@ -83,7 +83,7 @@ describe('buildEvidenceBrief — evidenceStrength', () => {
 // researchPriority
 // ============================================================
 
-describe('buildEvidenceBrief — researchPriority', () => {
+describe('buildEvidenceBrief â€” researchPriority', () => {
   test('field researchPriority ada di output', () => {
     const result = buildEvidenceBrief(makeAgentResult());
     assert.ok('researchPriority' in result, 'researchPriority should exist in output');
@@ -100,17 +100,17 @@ describe('buildEvidenceBrief — researchPriority', () => {
     assert.equal(result.researchPriority, 'HIGH');
   });
 
-  test('STRONG evidenceStrength → HIGH priority when researchPriority missing', () => {
+  test('STRONG evidenceStrength â†’ HIGH priority when researchPriority missing', () => {
     const result = buildEvidenceBrief(makeAgentResult({ evidenceStrength: 'STRONG', researchPriority: undefined }));
     assert.equal(result.researchPriority, 'HIGH');
   });
 
-  test('MODERATE evidenceStrength → MEDIUM priority when researchPriority missing', () => {
+  test('MODERATE evidenceStrength â†’ MEDIUM priority when researchPriority missing', () => {
     const result = buildEvidenceBrief(makeAgentResult({ evidenceStrength: 'MODERATE', researchPriority: undefined }));
     assert.equal(result.researchPriority, 'MEDIUM');
   });
 
-  test('WEAK evidenceStrength → LOW priority when researchPriority missing', () => {
+  test('WEAK evidenceStrength â†’ LOW priority when researchPriority missing', () => {
     const result = buildEvidenceBrief(makeAgentResult({ evidenceStrength: 'WEAK', researchPriority: undefined }));
     assert.equal(result.researchPriority, 'LOW');
   });
@@ -120,7 +120,7 @@ describe('buildEvidenceBrief — researchPriority', () => {
 // generatedAt
 // ============================================================
 
-describe('buildEvidenceBrief — generatedAt', () => {
+describe('buildEvidenceBrief â€” generatedAt', () => {
   test('field generatedAt ada di output', () => {
     const result = buildEvidenceBrief(makeAgentResult());
     assert.ok('generatedAt' in result, 'generatedAt should exist in output');
@@ -146,7 +146,7 @@ describe('buildEvidenceBrief — generatedAt', () => {
 // Array fields: observed, compared, interpreted, unknown
 // ============================================================
 
-describe('buildEvidenceBrief — array fields', () => {
+describe('buildEvidenceBrief â€” array fields', () => {
   test('observed, compared, interpreted, unknown tetap array dari input array', () => {
     const result = buildEvidenceBrief(makeAgentResult());
     assert.ok(Array.isArray(result.observed), 'observed should be array');
@@ -176,7 +176,7 @@ describe('buildEvidenceBrief — array fields', () => {
 // Null-safety / input tidak valid
 // ============================================================
 
-describe('buildEvidenceBrief — null-safety', () => {
+describe('buildEvidenceBrief â€” null-safety', () => {
   test('throws untuk input null', () => {
     assert.throws(() => buildEvidenceBrief(null), /Invalid agent result/);
   });
@@ -189,7 +189,7 @@ describe('buildEvidenceBrief — null-safety', () => {
     assert.throws(() => buildEvidenceBrief(42), /Invalid agent result/);
   });
 
-  test('tidak crash untuk objek kosong — menggunakan semua fallback', () => {
+  test('tidak crash untuk objek kosong â€” menggunakan semua fallback', () => {
     const result = buildEvidenceBrief({});
     assert.equal(result.ticker, null);
     assert.equal(result.signal, null);
@@ -215,10 +215,10 @@ describe('buildEvidenceBrief — null-safety', () => {
 });
 
 // ============================================================
-// Integritas output — semua field wajib ada
+// Integritas output â€” semua field wajib ada
 // ============================================================
 
-describe('buildEvidenceBrief — output field completeness', () => {
+describe('buildEvidenceBrief â€” output field completeness', () => {
   test('semua field kontrak EvidenceBrief ada di output', () => {
     const result = buildEvidenceBrief(makeAgentResult());
     const requiredFields = [
@@ -227,6 +227,88 @@ describe('buildEvidenceBrief — output field completeness', () => {
     ];
     for (const field of requiredFields) {
       assert.ok(field in result, `Field '${field}' should exist in EvidenceBrief output`);
+    }
+  });
+});
+
+// ============================================================
+// CP4 Challenge Signal â€” pass-through
+// ============================================================
+
+describe('buildEvidenceBrief â€” CP4 Challenge Signal pass-through', () => {
+  const challengeFields = {
+    signalType: 'PRICE_MOVEMENT',
+    challenge: {
+      supporting: ['Volume confirms movement'],
+      contradicting: ['Sector moved similarly'],
+      alternativeExplanations: ['Market-wide rally'],
+      unknown: ['Corporate action unconfirmed'],
+    },
+    challengeStatus: 'SUPPORTED',
+    confidence: 'MODERATE',
+  };
+
+  test('passes through all Challenge fields when present in agent result', () => {
+    const result = buildEvidenceBrief(makeAgentResult(challengeFields));
+
+    assert.equal(result.signalType, 'PRICE_MOVEMENT');
+    assert.deepEqual(result.challenge, challengeFields.challenge);
+    assert.equal(result.challengeStatus, 'SUPPORTED');
+    assert.equal(result.confidence, 'MODERATE');
+  });
+
+  test('Challenge fields are absent (not null) when agent omits them', () => {
+    const result = buildEvidenceBrief(makeAgentResult());
+
+    assert.equal('signalType' in result, false);
+    assert.equal('challenge' in result, false);
+    assert.equal('challengeStatus' in result, false);
+    assert.equal('confidence' in result, false);
+  });
+
+  test('CP3 fields remain untouched when Challenge fields are present', () => {
+    const result = buildEvidenceBrief(makeAgentResult(challengeFields));
+
+    // All CP3 fields must be exactly the same as without Challenge
+    assert.equal(result.ticker, 'BBCA');
+    assert.equal(result.signal, 'Price moved 6.20% in one day');
+    assert.deepEqual(result.observed, ['BBCA rose 6.20% on 2026-09-28']);
+    assert.deepEqual(result.compared, ['Sector peers rose 1.1% on average']);
+    assert.deepEqual(result.interpreted, ['Movement appears specific to BBCA']);
+    assert.deepEqual(result.unknown, ['Cause of volume spike not confirmed']);
+    assert.equal(result.evidenceStrength, 'MODERATE');
+    assert.equal(result.researchPriority, 'MEDIUM');
+    assert.equal(result.generatedAt, '2026-09-28T10:00:00.000Z');
+    assert.equal(result.limitation, null);
+  });
+
+  test('challenge.limitation is separate from Evidence Brief limitation', () => {
+    const result = buildEvidenceBrief(makeAgentResult({
+      limitation: 'Evidence Brief level limitation',
+      ...challengeFields,
+      challenge: {
+        ...challengeFields.challenge,
+        limitation: 'Challenge level limitation',
+      },
+    }));
+
+    // Evidence Brief limitation = top-level
+    assert.equal(result.limitation, 'Evidence Brief level limitation');
+    // Challenge limitation = inside challenge object, passed through as-is
+    assert.equal(result.challenge.limitation, 'Challenge level limitation');
+  });
+
+  test('all challengeStatus enum values pass through', () => {
+    for (const status of ['SUPPORTED', 'WEAKENED', 'CONTRADICTED', 'INCONCLUSIVE']) {
+      const result = buildEvidenceBrief(makeAgentResult({ ...challengeFields, challengeStatus: status }));
+      assert.equal(result.challengeStatus, status);
+    }
+  });
+
+  test('all confidence enum values pass through', () => {
+    for (const conf of ['STRONG', 'MODERATE', 'WEAK']) {
+      const result = buildEvidenceBrief(makeAgentResult({ ...challengeFields, confidence: conf }));
+      assert.equal(result.confidence, conf);
     }
   });
 });
