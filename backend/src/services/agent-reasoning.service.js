@@ -2,6 +2,9 @@
 
 import { generateText } from "../integration/gemini.client.js";
 
+const VALID_EVIDENCE_STRENGTHS = new Set(["STRONG", "MODERATE", "WEAK"]);
+const VALID_RESEARCH_PRIORITIES = new Set(["HIGH", "MEDIUM", "LOW"]);
+
 export function parseAgentResponse(response) {
   let parsed;
 
@@ -10,6 +13,31 @@ export function parseAgentResponse(response) {
   } catch {
     const error = new Error("Agent returned invalid JSON");
     error.code = "AGENT_INVALID_JSON";
+    throw error;
+  }
+
+  const isStringArray = (value) =>
+    Array.isArray(value) && value.every((item) => typeof item === "string");
+  const isPlainObject =
+    parsed !== null &&
+    typeof parsed === "object" &&
+    !Array.isArray(parsed) &&
+    Object.getPrototypeOf(parsed) === Object.prototype;
+
+  if (
+    !isPlainObject ||
+    typeof parsed.ticker !== "string" ||
+    typeof parsed.signal !== "string" ||
+    !isStringArray(parsed.observed) ||
+    !isStringArray(parsed.compared) ||
+    !isStringArray(parsed.interpreted) ||
+    !isStringArray(parsed.unknown) ||
+    !VALID_EVIDENCE_STRENGTHS.has(parsed.evidenceStrength) ||
+    !VALID_RESEARCH_PRIORITIES.has(parsed.researchPriority) ||
+    (typeof parsed.limitation !== "string" && parsed.limitation !== null)
+  ) {
+    const error = new Error("Agent returned invalid output");
+    error.code = "AGENT_INVALID_OUTPUT";
     throw error;
   }
 
