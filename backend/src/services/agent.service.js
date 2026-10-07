@@ -55,7 +55,7 @@ export async function investigate(body) {
   else {
     const [overview, historyRaw, peersRaw] = await Promise.all([
       getOverview(ticker),
-      getDailyHistory(ticker),
+      getDailyHistory(ticker, "2026-09-01", "2026-09-30"),
       getPeers(ticker),
     ]);
     const normalizedCurrent = normalizeOverview(overview);
