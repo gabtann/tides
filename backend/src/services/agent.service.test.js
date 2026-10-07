@@ -121,10 +121,19 @@ describe('investigate service', () => {
       const urlStr = typeof urlInput === 'string' ? urlInput : (urlInput?.url || '');
       const url = String(urlStr).toLowerCase();
 
-      // Agent call
+      // Agent call — CP5: Agent returns a nested envelope; evidenceBrief lives
+      // under the `evidenceBrief` key alongside input/selectedTools/evidence.
       if (url.includes('mock-agent') && url.includes('/investigate')) {
         capturedAgentBody = JSON.parse(opts.body);
-        return { ok: true, json: async () => mockEvidenceBrief };
+        return {
+          ok: true,
+          json: async () => ({
+            input: {},
+            selectedTools: ['getOverview', 'getHistorical', 'getPeers'],
+            evidence: {},
+            evidenceBrief: mockEvidenceBrief,
+          }),
+        };
       }
       // Sectors: history
       if (url.includes('history') || url.includes('daily')) {
@@ -231,9 +240,19 @@ describe('investigate service', () => {
     global.fetch = async (urlInput, opts) => {
       const urlStr = typeof urlInput === 'string' ? urlInput : (urlInput?.url || '');
       const url = String(urlStr).toLowerCase();
+      // CP5: Agent response is nested — evidenceBrief (with CP4 Challenge fields)
+      // lives under the `evidenceBrief` key of the envelope.
       if (url.includes('mock-agent') && url.includes('/investigate')) {
         capturedAgentBody = JSON.parse(opts.body);
-        return { ok: true, json: async () => mockWithChallenge };
+        return {
+          ok: true,
+          json: async () => ({
+            input: {},
+            selectedTools: ['getOverview', 'getHistorical', 'getPeers'],
+            evidence: {},
+            evidenceBrief: mockWithChallenge,
+          }),
+        };
       }
       return { ok: true, json: async () => mockOverview };
     };
@@ -284,5 +303,64 @@ describe('investigate service', () => {
     assert.equal('challenge' in result, false, 'challenge must not be present when Agent omits it');
     assert.equal('challengeStatus' in result, false, 'challengeStatus must not be present when Agent omits it');
     assert.equal('confidence' in result, false, 'confidence must not be present when Agent omits it');
+  });
+
+  // ── CP5: Nested evidenceBrief extraction boundary ──────────────────────────
+  // This test uses a PURE nested mock — the Agent response has NO flat Evidence
+  // Brief fields at the root level. Only `evidenceBrief` at the root carries the
+  // real data. If agent.service.js ever regresses and stops extracting
+  // `.evidenceBrief`, `result.signal` would be undefined and the test would fail.
+
+  test('CP5 — properly extracts nested evidenceBrief from Agent response (boundary proof)', async () => {
+    // Override fetch for this test only: return a strictly nested envelope.
+    // The root object is NOT a valid EvidenceBrief — only evidenceBrief sub-key is.
+    const nestedAgentResponse = {
+      input: { ticker: 'BBCA' },
+      selectedTools: [],
+      evidence: {},
+      evidenceBrief: {
+        ticker: 'BBCA',
+        signal: 'Nested signal extracted perfectly.',
+        observed: ['Extraction verified at boundary'],
+        compared: [],
+        interpreted: [],
+        unknown: [],
+        evidenceStrength: 'STRONG',
+        researchPriority: 'HIGH',
+        generatedAt: '2026-10-06T14:00:00.000Z',
+        limitation: null,
+      },
+    };
+
+    global.fetch = async (urlInput, opts) => {
+      const urlStr = typeof urlInput === 'string' ? urlInput : (urlInput?.url || '');
+      const url = String(urlStr).toLowerCase();
+      if (url.includes('mock-agent') && url.includes('/investigate')) {
+        capturedAgentBody = JSON.parse(opts.body);
+        return { ok: true, json: async () => nestedAgentResponse };
+      }
+      // Sectors fallback (overview only needed for currentContext)
+      return { ok: true, json: async () => mockOverview };
+    };
+
+    const result = await agentService.investigate({
+      ticker: 'BBCA',
+      signal: mockSignal,
+      currentContext: fullContext,
+    });
+
+    // Primary CP5 assertions: data must come from the nested evidenceBrief key.
+    assert.equal(result.signal, 'Nested signal extracted perfectly.',
+      'signal must be extracted from agentRawResponse.evidenceBrief, not root');
+    assert.equal(result.evidenceStrength, 'STRONG',
+      'evidenceStrength must reflect the nested evidenceBrief value');
+    assert.equal(result.researchPriority, 'HIGH');
+    assert.equal(result.ticker, 'BBCA');
+    assert.deepEqual(result.observed, ['Extraction verified at boundary']);
+    assert.equal(result.generatedAt, '2026-10-06T14:00:00.000Z');
+    assert.equal(result.limitation, null);
+
+    // Full shape check — ensures buildEvidenceBrief ran correctly on extracted data
+    assertEvidenceBriefShape(result);
   });
 });

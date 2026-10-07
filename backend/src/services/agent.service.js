@@ -75,7 +75,11 @@ export async function investigate(body) {
     agentInputPayload = buildAgentPayload(ticker, topSignal, currentContext);
   }
 
-  // Send to AI Agent and normalize the response
+  // Send to AI Agent and normalize the response.
+  // CP5 fix: Agent now returns a nested object where Evidence Brief lives under
+  // the `evidenceBrief` key. Extract it with a safe fallback to the root object
+  // so that older flat-format responses remain backward-compatible.
   const agentRawResponse = await runAgent(agentInputPayload);
-  return buildEvidenceBrief(agentRawResponse);
+  const briefData = agentRawResponse?.evidenceBrief || agentRawResponse;
+  return buildEvidenceBrief(briefData);
 }
