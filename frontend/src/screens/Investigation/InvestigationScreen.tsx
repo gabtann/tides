@@ -2,11 +2,10 @@ import { useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { BackLink } from '../../components/BackLink'
 import { Button } from '../../components/Button'
-import { Card } from '../../components/Card'
 import { ErrorState } from '../../components/ErrorState'
 import { LoadingState } from '../../components/LoadingState'
 import { INVESTIGATE_ERROR_MESSAGE, useInvestigation } from '../../hooks/useInvestigation'
-import type { ContextBlock } from '../../types/investigation'
+import { BriefContent } from '../EvidenceBrief/EvidenceBriefScreen'
 
 // Versi minimal. Loading per blok dan styling final menyusul (Hari 4).
 export function InvestigationScreen() {
@@ -40,10 +39,7 @@ export function InvestigationScreen() {
 
         {result && (
           <>
-            <ContextBlockCard block={result.whatChanged} />
-            <ContextBlockCard block={result.historicalContext} />
-            <ContextBlockCard block={result.peerContext} />
-            <ContextBlockCard block={result.fundamentalContext} />
+            <BriefContent brief={result} />
             <Button className="mt-5" onClick={() => navigate(`/challenge/${ticker}`)}>
               Challenge signal
             </Button>
@@ -51,22 +47,5 @@ export function InvestigationScreen() {
         )}
       </div>
     </section>
-  )
-}
-
-function ContextBlockCard({ block }: { block: ContextBlock }) {
-  return (
-    <Card>
-      <h2 className="font-display text-[18px] leading-[24px] font-semibold">{block.label}</h2>
-      <p className="mt-1">{block.summary}</p>
-      <dl className="mt-3 space-y-1 text-[13px] leading-[18px]">
-        {Object.entries(block.dataPoints).map(([label, value]) => (
-          <div key={label} className="flex justify-between gap-4">
-            <dt className="text-muted">{label}</dt>
-            <dd className="tabular-nums">{value}</dd>
-          </div>
-        ))}
-      </dl>
-    </Card>
   )
 }

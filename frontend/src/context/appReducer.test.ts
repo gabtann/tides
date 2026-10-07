@@ -87,13 +87,17 @@ describe('scan', () => {
 })
 
 describe('investigations', () => {
-  const block = { label: 'x', summary: 'y', dataPoints: {} }
   const investigation: InvestigationResult = {
     ticker: 'BBRI',
-    whatChanged: block,
-    historicalContext: block,
-    peerContext: block,
-    fundamentalContext: block,
+    signal: 'Unusual price-volume movement',
+    observed: ['Observed data'],
+    compared: ['Peer comparison'],
+    interpreted: ['Interpretation'],
+    unknown: ['Unknown factor'],
+    evidenceStrength: 'MODERATE',
+    researchPriority: 'HIGH',
+    generatedAt: at,
+    limitation: null,
   }
   const start = (state: AppState, ticker: string) => appReducer(state, { type: 'INVESTIGATE_START', ticker })
 
@@ -132,9 +136,21 @@ describe('investigations', () => {
 describe('challenges', () => {
   const challenge: ChallengeResult = {
     ticker: 'BBRI',
-    initialSignal: 'Unusual price-volume movement',
-    challengeFinding: 'Peers moved less',
-    signalStrength: 'MODERATE',
+    signal: 'Unusual price-volume movement',
+    observed: ['Observed data'],
+    compared: ['Peer comparison'],
+    interpreted: ['Interpretation'],
+    unknown: ['Unknown factor'],
+    evidenceStrength: 'MODERATE',
+    researchPriority: 'HIGH',
+    generatedAt: at,
+    limitation: null,
+    challenge: {
+      supporting: ['Supporting evidence'],
+      contradicting: ['Contradicting evidence'],
+      alternativeExplanations: ['Alternative explanation'],
+      unknown: ['Unknown challenge factor'],
+    },
   }
   const start = (state: AppState, ticker: string) => appReducer(state, { type: 'CHALLENGE_START', ticker })
 

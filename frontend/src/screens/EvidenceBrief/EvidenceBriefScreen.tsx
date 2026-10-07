@@ -147,8 +147,8 @@ function ChallengeSection({ brief }: { brief: EvidenceBrief }) {
 }
 
 // Prinsip kontrak: bukti yang tidak ada harus tetap terlihat, jadi field kosong diberi keterangan, bukan disembunyikan.
-function BriefContent({ brief }: { brief: EvidenceBrief }) {
-  return (
+export function BriefContent({ brief }: { brief: EvidenceBrief }) {
+    return (
     <div className="space-y-6">
       <section aria-labelledby="brief-signal">
         <h2 id="brief-signal" className={headingClass}>
