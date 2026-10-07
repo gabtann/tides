@@ -6,5 +6,5 @@ export const config = {
   sectorsApiKey: process.env.SECTORS_API_KEY || '',
   sectorsBaseUrl: process.env.SECTORS_BASE_URL || '',
   agentBaseUrl: process.env.AGENT_BASE_URL || '',
-  geminiApiKey: process.env.GEMINI_API_KEY || '',
+  groqApiKey: process.env.GROQ_API_KEY || '',
 };
