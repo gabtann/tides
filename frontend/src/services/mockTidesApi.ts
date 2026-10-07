@@ -1,5 +1,4 @@
 import { Confidence, SignalType, type EvidenceBrief } from '../types/evidenceBrief'
-import type { ContextBlock } from '../types/investigation'
 import type { ResearchPriority } from '../types/priority'
 import type { Signal } from '../types/signal'
 import type { Ticker } from '../types/ticker'
@@ -57,10 +56,6 @@ export function mockSignalFor(ticker: Ticker): MockSignal | null {
 
 function randomDelay(): number {
   return 500 + Math.random() * 1000
-}
-
-function block(label: string, summary: string, dataPoints: ContextBlock['dataPoints']): ContextBlock {
-  return { label, summary, dataPoints }
 }
 
 // Struktur mengikuti kontrak EvidenceBrief. Ticker tanpa signal (misalnya UNVR) sengaja menghasilkan
@@ -147,33 +142,12 @@ export function createMockTidesApi(options: { delayMs?: number | (() => number) 
 
     async investigate(ticker) {
       await wait()
-      return {
-        ticker,
-        whatChanged: block('What changed?', `${ticker} moved outside its recent trading range.`, {
-          'Price change (5d)': '+6.2%',
-          'Volume vs 20d average': '2.4x',
-        }),
-        historicalContext: block('Historical context', 'The move sits near the top of the 1-year range.', {
-          '1y range position': '92nd percentile',
-        }),
-        peerContext: block('Peer context', 'Sector peers moved less over the same period.', {
-          'Peer median change (5d)': '+1.1%',
-        }),
-        fundamentalContext: block('Fundamental context', 'Valuation is slightly below the sector median.', {
-          'P/E': 11.4,
-          'Sector median P/E': 13.2,
-        }),
-      }
+      return mockEvidenceBrief(ticker)
     },
 
     async challenge(ticker) {
       await wait()
-      return {
-        ticker,
-        initialSignal: `${ticker} showed an unusual price-volume movement.`,
-        challengeFinding: 'Peer stocks showed a smaller, similar movement.',
-        signalStrength: 'MODERATE',
-      }
+      return mockEvidenceBrief(ticker)
     },
 
      async getEvidenceBrief(ticker) {

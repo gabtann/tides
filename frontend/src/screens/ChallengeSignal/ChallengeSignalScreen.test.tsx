@@ -19,12 +19,16 @@ describe('ChallengeSignalScreen', () => {
     await controlled.resolve('challenge')
   })
 
-  it('shows the initial signal, the challenge finding and the strength', async () => {
-    const { controlled } = openChallenge('/challenge/BBRI')
+  it('shows Evidence Brief signal and challenge fields', async () => {
+    const { controlled } = openChallenge('/challenge/GOTO')
     await controlled.resolve('challenge')
+
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.getByText('BBRI showed an unusual price-volume movement.')).toBeInTheDocument()
-    expect(screen.getByText('Peer stocks showed a smaller, similar movement.')).toBeInTheDocument()
+    expect(screen.getByText('Volume spike well above 20-day average')).toBeInTheDocument()
+    expect(screen.getByText(/SUPPORTED/)).toBeInTheDocument()
+    expect(
+      screen.getByText('Volume increase for GOTO was confirmed across 3 consecutive trading sessions.'),
+    ).toBeInTheDocument()
     expect(screen.getByText('Moderate')).toBeInTheDocument()
   })
 

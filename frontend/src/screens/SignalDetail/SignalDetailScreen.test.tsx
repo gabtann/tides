@@ -74,7 +74,7 @@ describe('SignalDetailScreen', () => {
 
     await controlled.resolve('investigate')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: 'What changed?' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Signal' })).toBeInTheDocument()
     expect(controlled.calls.investigate).toBe(1)
   })
 })

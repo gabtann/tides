@@ -34,7 +34,7 @@ Sebelum commit: `npm run lint`, `npm test`, dan `npm run build` harus lolos.
 
 | Variabel | Default | Keterangan |
 |---|---|---|
-| `VITE_USE_MOCK` | `true` | `false` untuk memakai backend asli lewat `httpTidesApi` |
+| `VITE_USE_MOCK` | `false` | `true` untuk memakai mock; selain itu memakai backend asli lewat `httpTidesApi` |
 | `VITE_API_BASE_URL` | `http://localhost:4000/api` | Alamat backend saat mock dimatikan |
 
 Dengan mock, watchlist disimpan di localStorage browser (`tides.mock.watchlist`), jadi tetap ada setelah refresh. Ticker `ZZZZ` dan `XXXX` sengaja ditolak mock untuk mensimulasikan penolakan dari backend.

@@ -1,9 +1,3 @@
-import type { EvidenceStrength } from './priority'
-import type { Ticker } from './ticker'
+import type { EvidenceBrief } from './evidenceBrief'
 
-export interface ChallengeResult {
-  ticker: Ticker
-  initialSignal: string
-  challengeFinding: string // contoh: "Peer stocks also showed similar movement."
-  signalStrength: EvidenceStrength
-}
+export type ChallengeResult = EvidenceBrief

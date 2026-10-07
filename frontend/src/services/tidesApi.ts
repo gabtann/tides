@@ -5,8 +5,6 @@ import type { ScanResult } from '../types/signal'
 import type { Ticker } from '../types/ticker'
 import type { WatchlistItem } from '../types/watchlist'
 
-// Watchlist disimpan di backend dan dibaca dari identitas sesi, jadi scanWatchlist tidak menerima ticker.
-// Method yang gagal me-reject dengan Error yang message-nya layak ditampilkan ke user.
 export interface TidesApi {
   getWatchlist(): Promise<WatchlistItem[]>
   addTicker(ticker: Ticker): Promise<void>
@@ -14,7 +12,5 @@ export interface TidesApi {
   scanWatchlist(): Promise<ScanResult>
   investigate(ticker: Ticker): Promise<InvestigationResult>
   challenge(ticker: Ticker): Promise<ChallengeResult>
-   // Evidence Brief mengikuti kontrak POST /api/agent/investigate.
   getEvidenceBrief(ticker: Ticker): Promise<EvidenceBrief>
-
 }

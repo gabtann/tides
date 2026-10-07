@@ -99,19 +99,22 @@ describe('mock scan and research', () => {
     expect((await api.scanWatchlist()).signals).toEqual([])
   })
 
-  it('returns four context blocks from investigate', async () => {
+  it('returns an Evidence Brief from investigate', async () => {
     const result = await api.investigate('BBRI')
+
     expect(result.ticker).toBe('BBRI')
-    expect(result.whatChanged.label).toBe('What changed?')
-    expect(result.historicalContext.label).toBe('Historical context')
-    expect(result.peerContext.label).toBe('Peer context')
-    expect(result.fundamentalContext.label).toBe('Fundamental context')
+    expect(result.signal).toBe('Unusual price-volume movement')
+    expect(result.observed).toEqual([expect.any(String)])
+    expect(result.evidenceStrength).toBe('MODERATE')
   })
 
-  it('returns the challenge result for the ticker', async () => {
-    const result = await api.challenge('BBRI')
-    expect(result.ticker).toBe('BBRI')
-    expect(['STRONG', 'MODERATE', 'WEAK']).toContain(result.signalStrength)
+  it('returns Evidence Brief challenge fields from challenge', async () => {
+    const result = await api.challenge('GOTO')
+
+    expect(result.ticker).toBe('GOTO')
+    expect(result.challengeStatus).toBe('SUPPORTED')
+    expect(result.challenge?.supporting).toEqual([expect.any(String)])
+    expect(result.evidenceStrength).toBe('MODERATE')
   })
 
   it('returns an Evidence Brief for the ticker', async () => {

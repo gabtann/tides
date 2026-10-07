@@ -46,14 +46,23 @@ describe('InvestigationScreen', () => {
     await controlled.resolve('investigate')
   })
 
-  it('shows the four context blocks when done', async () => {
+  it('shows the Evidence Brief fields when done', async () => {
     const { controlled } = openInvestigation('/investigate/BBRI')
     await controlled.resolve('investigate')
+
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(blockHeadings()).toEqual(['What changed?', 'Historical context', 'Peer context', 'Fundamental context'])
-    expect(screen.getByText('BBRI moved outside its recent trading range.')).toBeInTheDocument()
-    expect(screen.getByText('Volume vs 20d average')).toBeInTheDocument()
-    expect(screen.getByText('2.4x')).toBeInTheDocument()
+    expect(blockHeadings()).toEqual([
+      'Signal',
+      'Observed',
+      'Compared',
+      'Interpreted',
+      'Unknown',
+      'Limitation',
+    ])
+    expect(screen.getByText('Unusual price-volume movement')).toBeInTheDocument()
+    expect(
+      screen.getByText('BBRI rose 6.2% over 5 days on 2.4x its 20-day average volume.'),
+    ).toBeInTheDocument()
   })
 
   it('continues to the challenge once the investigation is done', async () => {
@@ -76,7 +85,7 @@ describe('InvestigationScreen', () => {
     expect(controlled.calls.investigate).toBe(2)
     await controlled.resolve('investigate')
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(blockHeadings()).toHaveLength(4)
+    expect(blockHeadings()).toHaveLength(6)
   })
 
   it('reuses a finished investigation when the ticker is opened again', async () => {
@@ -94,7 +103,7 @@ describe('InvestigationScreen', () => {
     await user.click(screen.getByRole('link', { name: /BBRI/ }))
     await user.click(screen.getByRole('button', { name: 'Investigate' }))
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(blockHeadings()).toHaveLength(4)
+    expect(blockHeadings()).toHaveLength(6)
     expect(controlled.calls.investigate).toBe(1)
   })
 })

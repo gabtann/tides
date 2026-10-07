@@ -38,25 +38,61 @@ export function ChallengeSignalScreen() {
         )}
 
         {result && (
-          <>
-            <Card>
-              <h2 className="font-display text-[18px] leading-[24px] font-semibold">Initial signal</h2>
-              <p className="mt-1">{result.initialSignal}</p>
-            </Card>
-            <Card>
-              <h2 className="font-display text-[18px] leading-[24px] font-semibold">TIDES challenge</h2>
-              <p className="mt-1">{result.challengeFinding}</p>
-            </Card>
-            <Card>
-              <h2 className="font-display text-[18px] leading-[24px] font-semibold">Signal strength</h2>
-              <p className="mt-1">
-                <StrengthIndicator strength={result.signalStrength} />
-              </p>
-            </Card>
-            <Button className="mt-5" onClick={() => navigate(`/evidence/${ticker}`)}>
-              View evidence
-            </Button>
-          </>
+  <>
+    <Card>
+      <h2 className="font-display text-[18px] leading-[24px] font-semibold">Signal</h2>
+      <p className="mt-1">{result.signal ?? 'No signal description was provided.'}</p>
+    </Card>
+
+    {result.challenge ? (
+      <Card>
+        <h2 className="font-display text-[18px] leading-[24px] font-semibold">TIDES challenge</h2>
+
+        {result.challengeStatus && (
+          <p className="mt-2">Status: {result.challengeStatus}</p>
+        )}
+        {result.confidence && (
+          <p className="mt-1">Confidence: {result.confidence}</p>
+        )}
+        {result.signalType && (
+          <p className="mt-1">Signal type: {result.signalType}</p>
+        )}
+
+        <h3 className="mt-4 font-semibold">Supporting</h3>
+        <ul className="list-disc pl-5">
+          {result.challenge.supporting.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+
+        <h3 className="mt-3 font-semibold">Contradicting</h3>
+        <ul className="list-disc pl-5">
+          {result.challenge.contradicting.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+
+        <h3 className="mt-3 font-semibold">Alternative explanations</h3>
+        <ul className="list-disc pl-5">
+          {result.challenge.alternativeExplanations.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+
+        <h3 className="mt-3 font-semibold">Unknown</h3>
+        <ul className="list-disc pl-5">
+          {result.challenge.unknown.map((item) => <li key={item}>{item}</li>)}
+        </ul>
+      </Card>
+    ) : (
+      <p role="status">Challenge details were not returned for this investigation.</p>
+    )}
+
+    <Card>
+      <h2 className="font-display text-[18px] leading-[24px] font-semibold">Evidence strength</h2>
+      <p className="mt-1">
+        <StrengthIndicator strength={result.evidenceStrength} />
+      </p>
+    </Card>
+
+    <Button className="mt-5" onClick={() => navigate(`/evidence/${ticker}`)}>
+      View evidence
+    </Button>
+            </>
         )}
       </div>
     </section>

@@ -3,7 +3,6 @@ import type { ResearchPriority } from '../types/priority'
 import type { ScanResult, Signal } from '../types/signal'
 import type { WatchlistItem } from '../types/watchlist'
 import { PRIORITY_ORDER } from '../utils/queue'
-import { createMockTidesApi } from './mockTidesApi'
 import type { TidesApi } from './tidesApi'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000/api'
@@ -107,8 +106,12 @@ export function toScanResult(raw: BackendScanResult): ScanResult {
   }
 }
 
-// Sementara dipinjam dari mock: /challenge belum ada (K17), dan /agent/investigate belum mengembalikan Evidence Brief (K39).
-const notYetInBackend = createMockTidesApi()
+async function fetchEvidenceBrief(ticker: string): Promise<EvidenceBrief> {
+  return request<EvidenceBrief>('/agent/investigate', {
+    method: 'POST',
+    body: JSON.stringify({ ticker }),
+  })
+}
 
 export const httpTidesApi: TidesApi = {
   async getWatchlist() {
@@ -137,13 +140,16 @@ export const httpTidesApi: TidesApi = {
     return toScanResult(await request<BackendScanResult>('/scan', { method: 'POST' }))
   },
 
-  
-  investigate: (ticker) => notYetInBackend.investigate(ticker),
-  challenge: (ticker) => notYetInBackend.challenge(ticker),
-  async getEvidenceBrief(ticker) {
-    return await request<EvidenceBrief>('/agent/investigate', {
-      method: 'POST',
-      body: JSON.stringify({ ticker }),
-    })
+  investigate(ticker) {
+    return fetchEvidenceBrief(ticker)
   },
+
+  challenge(ticker) {
+    return fetchEvidenceBrief(ticker)
+  },
+
+  getEvidenceBrief(ticker) {
+    return fetchEvidenceBrief(ticker)
+  },
+
 }
