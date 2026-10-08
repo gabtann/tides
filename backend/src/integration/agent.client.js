@@ -1,6 +1,7 @@
 import { config } from "../config/env.js";
 
 const AGENT_TIMEOUT_MS = 45_000;
+const VALID_AGENT_ERROR_STATUSES = new Set([400, 404, 429, 500, 502, 504]);
 
 async function runAgent(input) {
   if (!config.agentBaseUrl) {
@@ -24,9 +25,41 @@ async function runAgent(input) {
     });
 
     if (!response.ok) {
-      const error = new Error(`Agent service returned HTTP ${response.status}`);
-      error.code = "AGENT_REQUEST_FAILED";
-      error.status = 502;
+      const fallbackError = new Error(
+        `Agent service returned HTTP ${response.status}`,
+      );
+      fallbackError.code = "AGENT_REQUEST_FAILED";
+      fallbackError.status = 502;
+
+      let body;
+      try {
+        body = await response.json();
+      } catch {
+        throw fallbackError;
+      }
+
+      const agentError =
+        body?.success === false && typeof body.error === "object"
+          ? body.error
+          : typeof body?.error === "string"
+            ? { code: body.error, message: body.message }
+            : null;
+      const validErrorBody =
+        typeof agentError?.code === "string" &&
+        /^[A-Z][A-Z0-9_]{0,63}$/.test(agentError.code) &&
+        typeof agentError.message === "string" &&
+        agentError.message.trim().length > 0;
+
+      if (
+        !validErrorBody ||
+        !VALID_AGENT_ERROR_STATUSES.has(response.status)
+      ) {
+        throw fallbackError;
+      }
+
+      const error = new Error(agentError.message);
+      error.code = agentError.code;
+      error.status = response.status;
       throw error;
     }
 
