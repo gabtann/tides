@@ -30,13 +30,13 @@ export function InvestigationScreen() {
       <h1 className="mt-3 font-display text-[28px] leading-[34px] font-semibold">Investigation</h1>
       <p className="mt-2 font-semibold tabular-nums">{ticker}</p>
 
-      <div className="mt-6 space-y-3">
+      <div className="card-staggermt-6 space-y-3">
         {(status === 'idle' || status === 'loading') && <LoadingState message={`Investigating ${ticker}…`} />}
 
         {status === 'error' && errorCode === 'NO_SIGNAL_FOUND' && (
           <div
             role="status"
-            className="rounded-xl border border-line border-l-4 border-l-medium bg-surface p-4 text-fg"
+            className="card-motion rounded-xl border border-line border-l-4 border-l-medium bg-surface p-4 text-fg"
           >
             <h2 className="font-semibold">No qualifying signal found for {ticker}</h2>
             <p className="mt-1 text-muted">

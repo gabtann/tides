@@ -85,9 +85,9 @@ export function ChallengeSignalScreen() {
     ) : (
       <div
         role="status"
-        className="rounded-xl border border-medium/30 border-l-4 border-l-medium bg-surface p-4"
+        className="card-motion rounded-xl border border-medium/30 border-l-4 border-l-medium bg-surface p-4"
       >
-        <h2 className="font-display text-[18px] leading-[24px] font-semibold">
+        <h2 className="card-motion font-display text-[18px] leading-[24px] font-semibold">
           Challenge details unavailable
         </h2>
         <p className="mt-1 text-muted">
