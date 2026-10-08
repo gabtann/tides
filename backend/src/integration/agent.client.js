@@ -1,6 +1,6 @@
 import { config } from "../config/env.js";
 
-const AGENT_TIMEOUT_MS = 15000;
+const AGENT_TIMEOUT_MS = 45_000;
 
 async function runAgent(input) {
   if (!config.agentBaseUrl) {
