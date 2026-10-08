@@ -45,115 +45,147 @@ export function WatchlistScreen() {
     navigate('/queue')
   }
 
-  return (
-    <section>
-      <h1 className="font-display text-[28px] leading-[34px] font-semibold">My Watchlist</h1>
-      <p className="mt-1 text-muted">Track tickers you want to monitor.</p>
-
-      <div className="mt-6">
-        {status === 'error' ? (
-          <ErrorState message={loadError ?? WATCHLIST_LOAD_ERROR_MESSAGE}>
-            <Button onClick={reload}>Retry</Button>
-          </ErrorState>
-        ) : !loaded ? (
-          <LoadingState message="Loading your watchlist…" />
-        ) : items.length === 0 ? (
-          <>
-            <HeroSection />
-            <hr className="mb-8 border-line" />
-            <p className="max-w-[60ch] text-muted">Add your first ticker, for example BBRI, to start scanning.</p>
-          </>
-        ) : (
-          <>
-            {removeError && (
-              <p role="alert" className="mb-3 border-l-2 border-l-high pl-2 text-[13px] leading-[18px] text-fg">
-                {removeError}
-              </p>
-            )}
-            <Card className="p-0">
-              <div className="px-4 pt-4 pb-2">
-                <h2 className="font-display text-[18px] leading-[24px] font-semibold">
-                  Tracked tickers
-                </h2>
-                <p className="mt-1 text-[13px] leading-[18px] text-muted">
-                  {items.length} {items.length === 1 ? 'ticker' : 'tickers'}
-                </p>
-              </div>
-
-              <ul className="divide-y divide-line">
-                {items.map((item) => (
-                  <li key={item.ticker} className="flex items-center justify-between gap-4 px-4 py-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold tabular-nums">{item.ticker}</p>
-                      {companyName(item.ticker) && (
-                        <p className="mt-0.5 truncate text-[13px] leading-[18px] text-muted">
-                          {companyName(item.ticker)}
-                        </p>
-                      )}
-                    </div>
-
-                    <button
-                      type="button"
-                      aria-label={`Remove ${item.ticker}`}
-                      onClick={() => void handleRemove(item.ticker)}
-                      disabled={removing !== null}
-                      className="shrink-0 rounded-[10px] border border-line px-3 py-1.5 text-[13px] leading-[18px] text-muted hover:border-high/60 hover:text-high disabled:opacity-50"
-                    >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </>
-        )}
+    return (
+    <section className="grid grid-cols-1 gap-6 lg:min-h-[calc(100svh-6rem)] lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-12">
+      <div className="lg:sticky lg:top-8">
+        <HeroSection />
       </div>
 
-      <Card className="mt-6">
-        <div role="group" aria-label="Watchlist controls">
-          <div className="mb-4">
-            <h2 className="font-display text-[18px] leading-[24px] font-semibold">
-              Add to watchlist
-            </h2>
-            <p className="mt-1 text-[13px] leading-[18px] text-muted">
-              Add a ticker before scanning your watchlist.
-            </p>
-          </div>
-          <form onSubmit={(event) => void handleSubmit(event)} noValidate>
-            <label htmlFor="ticker-input" className="block text-[13px] leading-[18px] text-muted">
-              Ticker
-            </label>
-            <div className="mt-1 flex gap-2">
-              <input
-                id="ticker-input"
-                value={input}
-                onChange={(event) => {
-                  setInput(event.target.value)
-                  setError(null)
-                }}
-                disabled={!loaded || adding}
-                placeholder="BBRI"
-                autoComplete="off"
-                aria-invalid={error ? true : undefined}
-                aria-describedby={error ? 'ticker-error' : undefined}
-                className="min-w-0 flex-1 rounded-[10px] border border-line bg-surface px-3 py-2 text-fg uppercase placeholder:text-muted disabled:opacity-60"
-              />
-              <Button type="submit" variant="secondary" className="shrink-0" disabled={!loaded || adding}>
-                + Add Stock
-              </Button>
-            </div>
-            {error && (
-              <p id="ticker-error" className="mt-2 border-l-2 border-l-high pl-2 text-[13px] leading-[18px] text-fg">
-                {error}
-              </p>
-            )}
-          </form>
+      <div className="min-w-0">
+        <h1 className="font-display text-[28px] leading-[34px] font-semibold">
+          My Watchlist
+        </h1>
+        <p className="mt-1 text-muted">Track tickers you want to monitor.</p>
 
-          <Button className="mt-8 w-full" onClick={handleScan} disabled={!canScan || busy}>
-            Scan Watchlist
-          </Button>
+        <div className="mt-6">
+          {status === 'error' ? (
+            <ErrorState message={loadError ?? WATCHLIST_LOAD_ERROR_MESSAGE}>
+              <Button onClick={reload}>Retry</Button>
+            </ErrorState>
+          ) : !loaded ? (
+            <LoadingState message="Loading your watchlist…" />
+          ) : items.length === 0 ? (
+            <p className="max-w-[60ch] text-muted">
+              Add your first ticker, for example BBRI, to start scanning.
+            </p>
+          ) : (
+            <>
+              {removeError && (
+                <p
+                  role="alert"
+                  className="mb-3 border-l-2 border-l-high pl-2 text-[13px] leading-[18px] text-fg"
+                >
+                  {removeError}
+                </p>
+              )}
+
+              <Card className="glass-panel p-0">
+                <div className="px-4 pt-4 pb-2">
+                  <h2 className="font-display text-[18px] leading-[24px] font-semibold">
+                    Tracked tickers
+                  </h2>
+                  <p className="mt-1 text-[13px] leading-[18px] text-muted">
+                    {items.length} {items.length === 1 ? 'ticker' : 'tickers'}
+                  </p>
+                </div>
+
+                <ul className="divide-y divide-line">
+                  {items.map((item) => (
+                    <li
+                      key={item.ticker}
+                      className="flex items-center justify-between gap-4 px-4 py-3 transition-colors hover:bg-white/[0.03]"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-semibold tabular-nums">{item.ticker}</p>
+                        {companyName(item.ticker) && (
+                          <p className="mt-0.5 truncate text-[13px] leading-[18px] text-muted">
+                            {companyName(item.ticker)}
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        aria-label={`Remove ${item.ticker}`}
+                        onClick={() => void handleRemove(item.ticker)}
+                        disabled={removing !== null}
+                        className="shrink-0 rounded-[10px] border border-line px-3 py-1.5 text-[13px] leading-[18px] text-muted hover:border-high/60 hover:text-high disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </>
+          )}
         </div>
-      </Card>
+
+        <Card className="glass-panel mt-6">
+          <div role="group" aria-label="Watchlist controls">
+            <div className="mb-4">
+              <h2 className="font-display text-[18px] leading-[24px] font-semibold">
+                Add to watchlist
+              </h2>
+              <p className="mt-1 text-[13px] leading-[18px] text-muted">
+                Add a ticker before scanning your watchlist.
+              </p>
+            </div>
+
+            <form onSubmit={(event) => void handleSubmit(event)} noValidate>
+              <label
+                htmlFor="ticker-input"
+                className="block text-[13px] leading-[18px] text-muted"
+              >
+                Ticker
+              </label>
+
+              <div className="mt-1 flex gap-2">
+                <input
+                  id="ticker-input"
+                  value={input}
+                  onChange={(event) => {
+                    setInput(event.target.value)
+                    setError(null)
+                  }}
+                  disabled={!loaded || adding}
+                  placeholder="BBRI"
+                  autoComplete="off"
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? 'ticker-error' : undefined}
+                  className="min-w-0 flex-1 rounded-[10px] border border-line bg-surface px-3 py-2 text-fg uppercase placeholder:text-muted disabled:opacity-60"
+                />
+
+                <Button
+                  type="submit"
+                  variant="secondary"
+                  className="shrink-0"
+                  disabled={!loaded || adding}
+                >
+                  + Add Stock
+                </Button>
+              </div>
+
+              {error && (
+                <p
+                  id="ticker-error"
+                  className="mt-2 border-l-2 border-l-high pl-2 text-[13px] leading-[18px] text-fg"
+                >
+                  {error}
+                </p>
+              )}
+            </form>
+
+            <Button
+              className="mt-8 w-full"
+              onClick={handleScan}
+              disabled={!canScan || busy}
+            >
+              Scan Watchlist
+            </Button>
+          </div>
+        </Card>
+      </div>
     </section>
   )
 }
