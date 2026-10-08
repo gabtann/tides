@@ -15,13 +15,20 @@ export function useScan() {
 
   const startScan = useCallback(async () => {
     if (!canScan) return
+
+    const scannedTickers = watchlist.items.map((item) => item.ticker)
     dispatch({ type: 'SCAN_START' })
+
     try {
-      dispatch({ type: 'SCAN_SUCCESS', result: await api.scanWatchlist() })
+      const result = await api.scanWatchlist()
+      dispatch({
+        type: 'SCAN_SUCCESS',
+        result: { ...result, scannedTickers },
+      })
     } catch (err) {
       dispatch({ type: 'SCAN_ERROR', error: errorMessage(err, SCAN_ERROR_MESSAGE) })
     }
-  }, [canScan, dispatch, api])
+  }, [canScan, dispatch, api, watchlist.items])
 
   return { status, result, error, canScan, startScan }
 }

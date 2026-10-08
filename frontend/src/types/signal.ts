@@ -20,4 +20,5 @@ export interface ScanResult {
   scannedAt: string
   signals: Signal[]
   errors?: ScanError[]
+  scannedTickers?: Ticker[]
 }
