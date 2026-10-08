@@ -142,15 +142,30 @@ describe('agent.client — AGENT_REQUEST_FAILED', () => {
 // ============================================================
 
 describe('agent.client — AGENT_TIMEOUT', () => {
-  test('melempar AGENT_TIMEOUT ketika fetch di-abort dengan AbortError', async () => {
+  test('melempar AGENT_TIMEOUT 504 setelah 45 detik dan membersihkan timer', async () => {
     const config = await importConfig();
     const runAgent = await importRunAgent();
 
     const saved = config.agentBaseUrl;
     config.agentBaseUrl = 'http://mock-agent:9999';
 
-    // Simulasi AbortError (yang dilempar AbortController.abort())
-    global.fetch = async () => {
+    const originalSetTimeout = global.setTimeout;
+    const originalClearTimeout = global.clearTimeout;
+    let timeoutCallback;
+    let timeoutDelay;
+    let clearedTimer;
+    const timer = {};
+    global.setTimeout = (callback, delay) => {
+      timeoutCallback = callback;
+      timeoutDelay = delay;
+      return timer;
+    };
+    global.clearTimeout = (handle) => {
+      clearedTimer = handle;
+    };
+    global.fetch = async (_url, options) => {
+      timeoutCallback();
+      assert.equal(options.signal.aborted, true);
       const err = new Error('The operation was aborted');
       err.name = 'AbortError';
       throw err;
@@ -161,13 +176,18 @@ describe('agent.client — AGENT_TIMEOUT', () => {
         () => runAgent({ ticker: 'BBCA' }),
         (err) => {
           assert.equal(err.code, 'AGENT_TIMEOUT');
+          assert.equal(err.status, 504);
           assert.ok(err.message.includes('timed out'));
           return true;
         }
       );
+      assert.equal(timeoutDelay, 45_000);
+      assert.equal(clearedTimer, timer);
     } finally {
       config.agentBaseUrl = saved;
       global.fetch = originalFetch;
+      global.setTimeout = originalSetTimeout;
+      global.clearTimeout = originalClearTimeout;
     }
   });
 });

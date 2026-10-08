@@ -7,6 +7,8 @@ if (!config.groqApiKey) {
 
 const groq = new Groq({
   apiKey: config.groqApiKey,
+  timeout: 20_000,
+  maxRetries: 0,
 });
 
 async function generateText(contents) {
