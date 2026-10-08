@@ -24,6 +24,7 @@ export interface InvestigationState {
   status: LoadStatus
   result?: InvestigationResult
   error?: string
+  errorCode?: string
 }
 
 export interface ChallengeState {
@@ -61,7 +62,7 @@ export type AppAction =
   | { type: 'SCAN_ERROR'; error: string }
   | { type: 'INVESTIGATE_START'; ticker: Ticker }
   | { type: 'INVESTIGATE_SUCCESS'; ticker: Ticker; result: InvestigationResult }
-  | { type: 'INVESTIGATE_ERROR'; ticker: Ticker; error: string }
+  | { type: 'INVESTIGATE_ERROR'; ticker: Ticker; error: string; errorCode?: string }
   | { type: 'CHALLENGE_START'; ticker: Ticker }
   | { type: 'CHALLENGE_SUCCESS'; ticker: Ticker; result: ChallengeResult }
   | { type: 'CHALLENGE_ERROR'; ticker: Ticker; error: string }
@@ -110,7 +111,7 @@ export function appReducer(state: AppState, action: AppAction): AppState {
     case 'INVESTIGATE_SUCCESS':
       return withInvestigation(state, action.ticker, { status: 'success', result: action.result })
     case 'INVESTIGATE_ERROR':
-      return withInvestigation(state, action.ticker, { status: 'error', error: action.error })
+      return withInvestigation(state, action.ticker, { status: 'error', error: action.error, ...(action.errorCode ? { errorCode: action.errorCode } : {}) })
     case 'CHALLENGE_START':
       return withChallenge(state, action.ticker, { status: 'loading' })
     case 'CHALLENGE_SUCCESS':

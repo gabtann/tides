@@ -26,7 +26,7 @@ describe('EvidenceBriefScreen', () => {
     await controlled.resolve('getEvidenceBrief')
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(sectionHeadings()).toEqual(['Signal', 'Observed', 'Compared', 'Interpreted', 'Unknown', 'Limitation'])
+    expect(sectionHeadings()).toEqual(['Signal summary', 'Observed', 'Compared', 'Interpreted', 'Unknown', 'Limitation'])
     expect(screen.getByText('Unusual price-volume movement')).toBeInTheDocument()
     expect(screen.getByText('BBRI rose 6.2% over 5 days on 2.4x its 20-day average volume.')).toBeInTheDocument()
     expect(screen.getByText('The data does not show what caused the extra volume.')).toBeInTheDocument()

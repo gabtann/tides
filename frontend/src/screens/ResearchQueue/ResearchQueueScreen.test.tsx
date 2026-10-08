@@ -5,7 +5,7 @@ import { createControlledApi } from '../../test/controlledApi'
 import { renderApp, watchlistLoaded } from '../../test/renderApp'
 import { seedScan, seedWatchlist } from '../../test/seed'
 
-const DISCLAIMER = 'HIGH = research priority, not an investment recommendation.'
+const DISCLAIMER = 'HIGH indicates research priority only; it is not an investment recommendation.'
 const at = '2026-09-23T12:00:00.000Z'
 const storedScan: ScanResult = {
   scannedAt: at,
@@ -67,9 +67,9 @@ describe('ResearchQueueScreen', () => {
   it('shows a neutral message when nothing stands out', async () => {
     const { controlled } = await scanFromWatchlist(['UNVR'])
     await controlled.resolveNext()
-    expect(screen.getByText('No significant changes across your watchlist.')).toBeInTheDocument()
+    expect(screen.getByText('No signals are currently shown in the queue.')).toBeInTheDocument()
     expect(screen.queryByRole('heading', { level: 2 })).not.toBeInTheDocument()
-    expect(screen.getByText(DISCLAIMER)).toBeInTheDocument()
+    expect(screen.getByText('UNVR')).toBeInTheDocument()
   })
 
   it('recovers from a failed scan with Retry scan', async () => {
@@ -215,7 +215,8 @@ describe('ResearchQueueScreen back link', () => {
   it('is there when nothing stands out', async () => {
     const { controlled } = await scanFromWatchlist(['UNVR'])
     await controlled.resolveNext()
-    expect(screen.getByText('No significant changes across your watchlist.')).toBeInTheDocument()
+    expect(screen.getByText('UNVR')).toBeInTheDocument()
+    expect(screen.getByText('No signals are currently shown in the queue.')).toBeInTheDocument()
     expectSingleBackLink()
   })
 

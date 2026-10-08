@@ -39,9 +39,13 @@ export function ChallengeSignalScreen() {
 
         {result && (
   <>
-    <Card>
-      <h2 className="font-display text-[18px] leading-[24px] font-semibold">Signal</h2>
-      <p className="mt-1">{result.signal ?? 'No signal description was provided.'}</p>
+    <Card className="border-l-4 border-l-link">
+      <p className="text-[12px] font-semibold uppercase tracking-wide text-link">
+        Detected signal
+      </p>
+      <p className="mt-1 max-w-[60ch] font-display text-[20px] leading-[28px] font-medium">
+        {result.signal ?? 'No signal description was provided.'}
+      </p>
     </Card>
 
     {result.challenge ? (
@@ -79,14 +83,31 @@ export function ChallengeSignalScreen() {
         </ul>
       </Card>
     ) : (
-      <p role="status">Challenge details were not returned for this investigation.</p>
+      <div
+        role="status"
+        className="rounded-xl border border-medium/30 border-l-4 border-l-medium bg-surface p-4"
+      >
+        <h2 className="font-display text-[18px] leading-[24px] font-semibold">
+          Challenge details unavailable
+        </h2>
+        <p className="mt-1 text-muted">
+          This investigation includes the signal and evidence, but no challenge analysis.
+        </p> 
+      </div>
     )}
 
-    <Card>
-      <h2 className="font-display text-[18px] leading-[24px] font-semibold">Evidence strength</h2>
-      <p className="mt-1">
+    <Card className="sm:flex sm:items-center sm:justify-between sm:gap-6">
+      <div>
+        <h2 className="font-display text-[18px] leading-[24px] font-semibold">
+          Evidence strength
+        </h2>
+        <p className="mt-1 text-[13px] leading-[18px] text-muted">
+          How well the available evidence supports this signal.
+        </p>
+      </div>
+      <div className="mt-2 text-[18px] sm:mt-0">
         <StrengthIndicator strength={result.evidenceStrength} />
-      </p>
+      </div>
     </Card>
 
     <Button className="mt-5" onClick={() => navigate(`/evidence/${ticker}`)}>

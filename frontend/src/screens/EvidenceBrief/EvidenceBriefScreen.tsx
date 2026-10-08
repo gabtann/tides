@@ -41,6 +41,17 @@ const headingClass = 'font-display text-[18px] leading-[24px] font-semibold'
 const generatedAtFormat = new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
 const linkClass = 'rounded text-link hover:underline hover:underline-offset-4'
 
+function formatSignalLabel(signal: string | null): string {
+  if (!signal) return 'No signal description was provided.'
+  if (!/^[A-Z0-9]+(?:_[A-Z0-9]+)*$/.test(signal)) return signal
+
+  return signal
+    .toLowerCase()
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
 export function EvidenceBriefScreen() {
   const ticker = (useParams().ticker ?? '').toUpperCase()
   const { status, result, error, start } = useEvidenceBrief(ticker)
@@ -150,17 +161,22 @@ function ChallengeSection({ brief }: { brief: EvidenceBrief }) {
 export function BriefContent({ brief }: { brief: EvidenceBrief }) {
     return (
     <div className="space-y-6">
-      <section aria-labelledby="brief-signal">
-        <h2 id="brief-signal" className={headingClass}>
-          Signal
+      <section
+        aria-labelledby="brief-signal"
+        className="rounded-xl border border-line border-l-4 border-l-link bg-surface p-4"
+      >
+        <h2 id="brief-signal" className="text-[13px] font-semibold uppercase tracking-wide text-link">
+          Signal summary
         </h2>
-        <p className="mt-1 max-w-[60ch]">{brief.signal ?? 'No signal description was provided.'}</p>
+        <p className="mt-1 max-w-[60ch] font-display text-[20px] leading-[28px] font-medium">
+          {formatSignalLabel(brief.signal)}
+        </p>
       </section>
 
       {brief.challenge && <ChallengeSection brief={brief} />}
 
       {SECTIONS.map((section) => (
-        <section key={section.key} aria-labelledby={`brief-${section.key}`} className={`border-l-2 pl-3 ${section.border}`}>
+        <section key={section.key} aria-labelledby={`brief-${section.key}`} className={`rounded-xl border border-line border-l-4 bg-surface p-4 ${section.border}`}>
           <h2 id={`brief-${section.key}`} className={headingClass}>
             {section.label}
           </h2>
@@ -176,22 +192,25 @@ export function BriefContent({ brief }: { brief: EvidenceBrief }) {
         </section>
       ))}
 
-      <dl className="space-y-3">
-        <div className="flex items-center justify-between gap-4">
-          <dt className="text-muted">Evidence strength</dt>
-          <dd>
+      <dl className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-line bg-surface p-4">
+          <dt className="text-[13px] text-muted">Evidence strength</dt>
+          <dd className="mt-2">
             <StrengthIndicator strength={brief.evidenceStrength} />
           </dd>
         </div>
-        <div className="flex items-center justify-between gap-4">
-          <dt className="text-muted">Research priority</dt>
-          <dd>
+
+        <div className="rounded-xl border border-line bg-surface p-4">
+          <dt className="text-[13px] text-muted">Research priority</dt>
+          <dd className="mt-2">
             <PriorityBadge priority={brief.researchPriority} />
           </dd>
         </div>
       </dl>
 
-      <section aria-labelledby="brief-limitation">
+      <section
+        aria-labelledby="brief-limitation"
+        className="rounded-xl border border-medium/30 border-l-4 border-l-medium bg-medium/10 p-4">
         <h2 id="brief-limitation" className={headingClass}>
           Limitation
         </h2>
