@@ -46,7 +46,7 @@ export function SignalDetailScreen() {
         <PriorityBadge priority={signal.priority} />
       </header>
 
-      <div className="mt-6 rounded-xl border border-line border-l-4 border-l-link bg-surface p-4">
+      <div className="card-motion mt-6 rounded-xl border border-line border-l-4 border-l-link bg-surface p-4">
         <p className="text-[12px] font-semibold uppercase tracking-wide text-link">
           Detected signal
         </p>
@@ -56,7 +56,7 @@ export function SignalDetailScreen() {
       </div>
       <p className="mt-2 text-[13px] leading-[18px] text-muted">{formatRelativeTime(signal.detectedAt)}</p>
 
-      <div className="mt-6 max-w-[60ch] rounded-lg border border-medium/30 border-l-4 border-l-medium bg-surface p-3">
+      <div className="card-motion mt-6 max-w-[60ch] rounded-lg border border-medium/30 border-l-4 border-l-medium bg-surface p-3">
         <p className="text-[12px] font-semibold uppercase tracking-wide text-medium">
           Priority note
         </p>

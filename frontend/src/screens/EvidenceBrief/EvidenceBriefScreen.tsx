@@ -160,10 +160,10 @@ function ChallengeSection({ brief }: { brief: EvidenceBrief }) {
 // Prinsip kontrak: bukti yang tidak ada harus tetap terlihat, jadi field kosong diberi keterangan, bukan disembunyikan.
 export function BriefContent({ brief }: { brief: EvidenceBrief }) {
     return (
-    <div className="space-y-6">
+    <div className="card-stagger space-y-6">
       <section
         aria-labelledby="brief-signal"
-        className="rounded-xl border border-line border-l-4 border-l-link bg-surface p-4"
+        className="card-motion rounded-xl border border-line border-l-4 border-l-link bg-surface p-4"
       >
         <h2 id="brief-signal" className="text-[13px] font-semibold uppercase tracking-wide text-link">
           Signal summary
@@ -176,7 +176,7 @@ export function BriefContent({ brief }: { brief: EvidenceBrief }) {
       {brief.challenge && <ChallengeSection brief={brief} />}
 
       {SECTIONS.map((section) => (
-        <section key={section.key} aria-labelledby={`brief-${section.key}`} className={`rounded-xl border border-line border-l-4 bg-surface p-4 ${section.border}`}>
+        <section key={section.key} aria-labelledby={`brief-${section.key}`} className={`card-motion rounded-xl border border-line border-l-4 bg-surface p-4 ${section.border}`}>
           <h2 id={`brief-${section.key}`} className={headingClass}>
             {section.label}
           </h2>
@@ -192,15 +192,15 @@ export function BriefContent({ brief }: { brief: EvidenceBrief }) {
         </section>
       ))}
 
-      <dl className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-line bg-surface p-4">
+      <dl className="card-stagger grid gap-3 sm:grid-cols-2">
+        <div className="card-motion rounded-xl border border-line bg-surface p-4">
           <dt className="text-[13px] text-muted">Evidence strength</dt>
           <dd className="mt-2">
             <StrengthIndicator strength={brief.evidenceStrength} />
           </dd>
         </div>
 
-        <div className="rounded-xl border border-line bg-surface p-4">
+        <div className="card-motion rounded-xl border border-line bg-surface p-4">
           <dt className="text-[13px] text-muted">Research priority</dt>
           <dd className="mt-2">
             <PriorityBadge priority={brief.researchPriority} />
@@ -210,7 +210,7 @@ export function BriefContent({ brief }: { brief: EvidenceBrief }) {
 
       <section
         aria-labelledby="brief-limitation"
-        className="rounded-xl border border-medium/30 border-l-4 border-l-medium bg-medium/10 p-4">
+        className="card-stagger card-motion rounded-xl border border-medium/30 border-l-4 border-l-medium bg-medium/10 p-4">
         <h2 id="brief-limitation" className={headingClass}>
           Limitation
         </h2>

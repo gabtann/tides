@@ -62,7 +62,7 @@ export function ResearchQueueScreen() {
         </Button>
       </header>
 
-      <div className="mt-6 max-w-[60ch] rounded-lg border border-medium/30 border-l-4 border-l-medium bg-surface p-3">
+      <div className="card-motion mt-6 max-w-[60ch] rounded-lg border border-medium/30 border-l-4 border-l-medium bg-surface p-3">
         <p className="text-[12px] font-semibold uppercase tracking-wide text-medium">
           Priority note
         </p>
@@ -98,7 +98,7 @@ export function ResearchQueueScreen() {
         {watchlistReady && noSignalTickers.length > 0 && (
           <div
             role="status"
-            className="rounded-xl border border-line border-l-4 border-l-medium bg-surface p-4"
+            className="card-motion rounded-xl border border-line border-l-4 border-l-medium bg-surface p-4"
           >
             <p className="font-semibold">
               {noSignalTickers.length} {noSignalTickers.length === 1 ? 'ticker' : 'tickers'} did not meet
@@ -143,7 +143,7 @@ export function ResearchQueueScreen() {
                     {itemCount(group.signals.length)}
                   </span>
                 </div>
-                <ul className="mt-3 space-y-3">
+                <ul className="card-stagger mt-3 space-y-3">
                   {group.signals.map((signal) => (
                     <li key={signal.ticker}>
                       <SignalCard signal={signal} />

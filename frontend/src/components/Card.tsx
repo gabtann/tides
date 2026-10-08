@@ -20,7 +20,7 @@ export function Card({
   children: ReactNode
 }) {
   return (
-    <div className={`rounded-xl border border-line bg-surface p-4 text-fg ${ACCENT_CLASS[accent]} ${className}`}>
+    <div className={`card-motion rounded-xl border border-line bg-surface p-4 text-fg ${ACCENT_CLASS[accent]} ${className}`}>
       {children}
     </div>
   )

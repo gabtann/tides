@@ -80,6 +80,97 @@ body {
   pointer-events: none;
 }
 
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    translate: -18px 0;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+.card-motion {
+  animation: card-enter 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transition: transform 220ms ease;
+}
+
+/* Jeda bertambah untuk setiap anak dalam wadah .card-stagger */
+.card-stagger > :nth-child(1) { --card-enter-delay: 0ms; }
+.card-stagger > :nth-child(2) { --card-enter-delay: 100ms; }
+.card-stagger > :nth-child(3) { --card-enter-delay: 200ms; }
+.card-stagger > :nth-child(4) { --card-enter-delay: 300ms; }
+.card-stagger > :nth-child(5) { --card-enter-delay: 400ms; }
+.card-stagger > :nth-child(6) { --card-enter-delay: 500ms; }
+.card-stagger > :nth-child(7) { --card-enter-delay: 600ms; }
+.card-stagger > :nth-child(8) { --card-enter-delay: 700ms; }
+
+.card-stagger > :nth-child(1).card-motion,
+.card-stagger > :nth-child(1) .card-motion,
+.card-stagger > :nth-child(2).card-motion,
+.card-stagger > :nth-child(2) .card-motion,
+.card-stagger > :nth-child(3).card-motion,
+.card-stagger > :nth-child(3) .card-motion,
+.card-stagger > :nth-child(4).card-motion,
+.card-stagger > :nth-child(4) .card-motion,
+.card-stagger > :nth-child(5).card-motion,
+.card-stagger > :nth-child(5) .card-motion,
+.card-stagger > :nth-child(6).card-motion,
+.card-stagger > :nth-child(6) .card-motion,
+.card-stagger > :nth-child(7).card-motion,
+.card-stagger > :nth-child(7) .card-motion,
+.card-stagger > :nth-child(8).card-motion,
+.card-stagger > :nth-child(8) .card-motion {
+  animation-delay: var(--card-enter-delay, 0ms);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card-motion:hover {
+    position: relative;
+    z-index: 1;
+    transform: translateY(-5px) scale(1.04);
+  }
+
+  .card-interactive:focus-visible .card-motion {
+    outline: 2px solid var(--color-link);
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-motion {
+    animation: none;
+    transition: none;
+  }
+}
+
+.card-motion {
+  animation: card-enter 300ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transition: transform 220ms ease;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .card-motion:hover {
+    position: relative;
+    z-index: 1;
+    transform: translateY(-5px) scale(1.04);
+  }
+
+  .card-interactive:focus-visible .card-motion {
+    outline: 2px solid var(--color-link);
+    outline-offset: 3px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-motion {
+    animation: none;
+    transition: none;
+  }
+}
+
 :focus-visible {
   outline: 2px solid var(--color-link);
   outline-offset: 2px;

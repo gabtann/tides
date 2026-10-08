@@ -12,7 +12,7 @@ const CARD_ACCENT = { HIGH: 'high', MEDIUM: 'medium', LOW: 'low' } as const
 export function SignalCard({ signal }: { signal: Signal }) {
   const name = companyName(signal.ticker)
   return (
-    <Link to={`/signal/${signal.ticker}`} className="block rounded-xl">
+    <Link to={`/signal/${signal.ticker}`} className="card-interactive block rounded-xl">
       <Card accent={CARD_ACCENT[signal.priority]}>
         <div className="flex items-start justify-between gap-3">
           <p className="min-w-0">
