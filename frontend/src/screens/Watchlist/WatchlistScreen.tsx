@@ -8,6 +8,7 @@ import { LoadingState } from '../../components/LoadingState'
 import { WATCHLIST_LOAD_ERROR_MESSAGE } from '../../context/loadWatchlist'
 import { useScan } from '../../hooks/useScan'
 import { useWatchlist } from '../../hooks/useWatchlist'
+import { companyName } from '../../utils/companyNames'
 import type { Ticker } from '../../types/ticker'
 
 export function WatchlistScreen() {
@@ -47,6 +48,7 @@ export function WatchlistScreen() {
   return (
     <section>
       <h1 className="font-display text-[28px] leading-[34px] font-semibold">My Watchlist</h1>
+      <p className="mt-1 text-muted">Track tickers you want to monitor.</p>
 
       <div className="mt-6">
         {status === 'error' ? (
@@ -69,16 +71,33 @@ export function WatchlistScreen() {
               </p>
             )}
             <Card className="p-0">
+              <div className="px-4 pt-4 pb-2">
+                <h2 className="font-display text-[18px] leading-[24px] font-semibold">
+                  Tracked tickers
+                </h2>
+                <p className="mt-1 text-[13px] leading-[18px] text-muted">
+                  {items.length} {items.length === 1 ? 'ticker' : 'tickers'}
+                </p>
+              </div>
+
               <ul className="divide-y divide-line">
                 {items.map((item) => (
-                  <li key={item.ticker} className="flex items-center justify-between px-4 py-3">
-                    <span className="font-semibold tabular-nums">{item.ticker}</span>
+                  <li key={item.ticker} className="flex items-center justify-between gap-4 px-4 py-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold tabular-nums">{item.ticker}</p>
+                      {companyName(item.ticker) && (
+                        <p className="mt-0.5 truncate text-[13px] leading-[18px] text-muted">
+                          {companyName(item.ticker)}
+                        </p>
+                      )}
+                    </div>
+
                     <button
                       type="button"
                       aria-label={`Remove ${item.ticker}`}
                       onClick={() => void handleRemove(item.ticker)}
                       disabled={removing !== null}
-                      className="rounded-[10px] px-2 py-1 text-[13px] leading-[18px] text-muted hover:text-fg disabled:opacity-50"
+                      className="shrink-0 rounded-[10px] border border-line px-3 py-1.5 text-[13px] leading-[18px] text-muted hover:border-high/60 hover:text-high disabled:opacity-50"
                     >
                       Remove
                     </button>
@@ -92,6 +111,14 @@ export function WatchlistScreen() {
 
       <Card className="mt-6">
         <div role="group" aria-label="Watchlist controls">
+          <div className="mb-4">
+            <h2 className="font-display text-[18px] leading-[24px] font-semibold">
+              Add to watchlist
+            </h2>
+            <p className="mt-1 text-[13px] leading-[18px] text-muted">
+              Add a ticker before scanning your watchlist.
+            </p>
+          </div>
           <form onSubmit={(event) => void handleSubmit(event)} noValidate>
             <label htmlFor="ticker-input" className="block text-[13px] leading-[18px] text-muted">
               Ticker

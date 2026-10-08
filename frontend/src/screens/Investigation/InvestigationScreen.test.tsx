@@ -9,7 +9,6 @@ import { renderApp, watchlistLoaded } from '../../test/renderApp'
 import { seedScan, seedWatchlist } from '../../test/seed'
 
 const at = '2026-09-23T12:00:00.000Z'
-const blockHeadings = () => screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
 
 function openInvestigation(route: string) {
   const controlled = createControlledApi({ hold: ['investigate'] })
@@ -46,23 +45,19 @@ describe('InvestigationScreen', () => {
     await controlled.resolve('investigate')
   })
 
-  it('shows the Evidence Brief fields when done', async () => {
+  it('shows the investigation summary and next actions when done', async () => {
     const { controlled } = openInvestigation('/investigate/BBRI')
     await controlled.resolve('investigate')
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(blockHeadings()).toEqual([
-      'Signal',
-      'Observed',
-      'Compared',
-      'Interpreted',
-      'Unknown',
-      'Limitation',
-    ])
-    expect(screen.getByText('Unusual price-volume movement')).toBeInTheDocument()
     expect(
-      screen.getByText('BBRI rose 6.2% over 5 days on 2.4x its 20-day average volume.'),
+      screen.getByRole('heading', { level: 2, name: 'Evidence Brief ready' }),
     ).toBeInTheDocument()
+    expect(
+      screen.getByText('Review the full findings and limitations in the Evidence Brief.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'View Evidence Brief' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Challenge signal' })).toBeInTheDocument()
   })
 
   it('continues to the challenge once the investigation is done', async () => {
@@ -85,7 +80,9 @@ describe('InvestigationScreen', () => {
     expect(controlled.calls.investigate).toBe(2)
     await controlled.resolve('investigate')
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
-    expect(blockHeadings()).toHaveLength(6)
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Evidence Brief ready' }),
+    ).toBeInTheDocument()
   })
 
   it('reuses a finished investigation when the ticker is opened again', async () => {
@@ -103,7 +100,9 @@ describe('InvestigationScreen', () => {
     await user.click(screen.getByRole('link', { name: /BBRI/ }))
     await user.click(screen.getByRole('button', { name: 'Investigate' }))
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(blockHeadings()).toHaveLength(6)
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Evidence Brief ready' }),
+    ).toBeInTheDocument()
     expect(controlled.calls.investigate).toBe(1)
   })
 })

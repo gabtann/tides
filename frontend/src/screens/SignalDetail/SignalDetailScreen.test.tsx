@@ -5,7 +5,7 @@ import { createControlledApi } from '../../test/controlledApi'
 import { renderApp } from '../../test/renderApp'
 import { seedScan } from '../../test/seed'
 
-const DISCLAIMER = 'HIGH = research priority, not an investment recommendation.'
+const DISCLAIMER = 'HIGH indicates research priority only; it is not an investment recommendation.'
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60 * 1000).toISOString()
 const storedScan = (): ScanResult => ({
   scannedAt: minutesAgo(12),
@@ -74,7 +74,7 @@ describe('SignalDetailScreen', () => {
 
     await controlled.resolve('investigate')
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 2, name: 'Signal' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Evidence Brief ready' })).toBeInTheDocument()
     expect(controlled.calls.investigate).toBe(1)
   })
 })

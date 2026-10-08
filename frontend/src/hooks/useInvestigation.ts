@@ -8,7 +8,7 @@ export const INVESTIGATE_ERROR_MESSAGE =
 
 export function useInvestigation(ticker: Ticker) {
   const { state, dispatch, api } = useAppState()
-  const { status = 'idle', result, error } = state.investigations[ticker] ?? {}
+  const { status = 'idle', result, error, errorCode } = state.investigations[ticker] ?? {}
 
   // Idempotent: tidak memanggil ulang selagi berjalan atau kalau hasilnya sudah ada di context.
   const start = useCallback(async () => {
@@ -17,9 +17,22 @@ export function useInvestigation(ticker: Ticker) {
     try {
       dispatch({ type: 'INVESTIGATE_SUCCESS', ticker, result: await api.investigate(ticker) })
     } catch (err) {
-      dispatch({ type: 'INVESTIGATE_ERROR', ticker, error: errorMessage(err, INVESTIGATE_ERROR_MESSAGE) })
+      const code =
+        typeof err === 'object' &&
+        err !== null &&
+        'code' in err &&
+        typeof err.code === 'string'
+          ? err.code
+          : undefined
+
+      dispatch({
+        type: 'INVESTIGATE_ERROR',
+        ticker,
+        error: errorMessage(err, INVESTIGATE_ERROR_MESSAGE),
+        errorCode: code,
+      })
     }
   }, [status, ticker, dispatch, api])
 
-  return { status, result, error, start }
+  return { status, result, error, errorCode, start }
 }

@@ -46,12 +46,24 @@ export function SignalDetailScreen() {
         <PriorityBadge priority={signal.priority} />
       </header>
 
-      <p className="mt-6 text-[18px] leading-[26px]">{signal.reason}</p>
+      <div className="mt-6 rounded-xl border border-line border-l-4 border-l-link bg-surface p-4">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-link">
+          Detected signal
+        </p>
+        <p className="mt-1 font-display text-[20px] leading-[28px] font-medium text-fg">
+          {signal.reason}
+        </p>
+      </div>
       <p className="mt-2 text-[13px] leading-[18px] text-muted">{formatRelativeTime(signal.detectedAt)}</p>
 
-      <p className="mt-6 border-l-2 border-l-line pl-3 text-[13px] leading-[18px] text-muted">
-        HIGH = research priority, not an investment recommendation.
-      </p>
+      <div className="mt-6 max-w-[60ch] rounded-lg border border-medium/30 border-l-4 border-l-medium bg-surface p-3">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-medium">
+          Priority note
+        </p>
+        <p className="mt-1 text-[13px] leading-[18px] text-fg">
+          HIGH indicates research priority only; it is not an investment recommendation.
+        </p>
+      </div>
 
       <Button className="mt-8" onClick={investigate}>
         Investigate

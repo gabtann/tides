@@ -9,6 +9,7 @@ import { SCAN_ERROR_MESSAGE, useScan } from '../../hooks/useScan'
 import { useWatchlist } from '../../hooks/useWatchlist'
 import type { ResearchPriority } from '../../types/priority'
 import { selectQueueGroups } from '../../utils/queue'
+import { companyName } from '../../utils/companyNames'
 
 const GROUP_HEADING: Record<ResearchPriority, string> = {
   HIGH: 'High priority',
@@ -35,6 +36,13 @@ export function ResearchQueueScreen() {
   const watchlistReady = watchlistStatus === 'success'
   const groups = result && watchlistReady ? selectQueueGroups(result, items) : []
   const shownCount = groups.reduce((total, group) => total + group.signals.length, 0)
+  const scannedTickers = result?.scannedTickers ?? []
+  const signalTickers = new Set(result?.signals.map((signal) => signal.ticker) ?? [])
+  const errorTickers = new Set(result?.errors?.map((scanError) => scanError.ticker) ?? [])
+
+  const noSignalTickers = scannedTickers.filter(
+    (ticker) => !signalTickers.has(ticker) && !errorTickers.has(ticker),
+  )
   const rescan = () => void startScan()
 
   return (
@@ -54,9 +62,14 @@ export function ResearchQueueScreen() {
         </Button>
       </header>
 
-      <p className="mt-4 border-l-2 border-l-line pl-3 text-[13px] leading-[18px] text-muted">
-        HIGH = research priority, not an investment recommendation.
-      </p>
+      <div className="mt-6 max-w-[60ch] rounded-lg border border-medium/30 border-l-4 border-l-medium bg-surface p-3">
+        <p className="text-[12px] font-semibold uppercase tracking-wide text-medium">
+          Priority note
+        </p>
+        <p className="mt-1 text-[13px] leading-[18px] text-fg">
+          HIGH indicates research priority only; it is not an investment recommendation.
+        </p>
+      </div>
 
       <div className="mt-6 space-y-8">
         {isScanning && <LoadingState message={`Scanning ${tickers(items.length)}…`} />}
@@ -76,6 +89,35 @@ export function ResearchQueueScreen() {
               {result.errors.map((scanError) => (
                 <li key={scanError.ticker}>
                   <span className="font-semibold tabular-nums">{scanError.ticker}</span>: {scanError.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {watchlistReady && noSignalTickers.length > 0 && (
+          <div
+            role="status"
+            className="rounded-xl border border-line border-l-4 border-l-medium bg-surface p-4"
+          >
+            <p className="font-semibold">
+              {noSignalTickers.length} {noSignalTickers.length === 1 ? 'ticker' : 'tickers'} did not meet
+              the criteria for a qualifying signal:
+            </p>
+
+            <ul
+              className="mt-3 grid gap-2 sm:grid-cols-2"
+              aria-label="Tickers without qualifying signals"
+            >
+              {noSignalTickers.map((ticker) => (
+                <li
+                  key={ticker}
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-lg border border-line px-3 py-2"
+                >
+                  <span className="shrink-0 font-semibold tabular-nums">{ticker}</span>
+                  <span className="min-w-0 truncate text-right text-[13px] leading-[18px] text-muted">
+                    {companyName(ticker) ?? 'Company name unavailable'}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -120,7 +162,9 @@ export function ResearchQueueScreen() {
               </Link>
             </div>
           ) : (
-            <p className="text-muted">No significant changes across your watchlist.</p>
+            <p className="max-w-[60ch] text-muted">
+              No signals are currently shown in the queue.
+            </p>
           )
         ) : (
           status === 'idle' && (
