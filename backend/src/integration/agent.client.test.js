@@ -135,6 +135,189 @@ describe('agent.client — AGENT_REQUEST_FAILED', () => {
       global.fetch = originalFetch;
     }
   });
+
+  test('mempertahankan structured AGENT_INVALID_JSON dari Agent', async () => {
+    const config = await importConfig();
+    const runAgent = await importRunAgent();
+    const saved = config.agentBaseUrl;
+    config.agentBaseUrl = 'http://mock-agent:9999';
+    global.fetch = async () => ({
+      ok: false,
+      status: 500,
+      json: async () => ({
+        success: false,
+        error: { code: 'AGENT_INVALID_JSON', message: 'Invalid JSON output' },
+      }),
+    });
+
+    try {
+      await assert.rejects(
+        () => runAgent({ ticker: 'BBCA' }),
+        (err) => {
+          assert.equal(err.code, 'AGENT_INVALID_JSON');
+          assert.equal(err.status, 500);
+          assert.equal(err.message, 'Invalid JSON output');
+          return true;
+        }
+      );
+    } finally {
+      config.agentBaseUrl = saved;
+      global.fetch = originalFetch;
+    }
+  });
+
+  test('mempertahankan structured AGENT_INVALID_OUTPUT dari Agent', async () => {
+    const config = await importConfig();
+    const runAgent = await importRunAgent();
+    const saved = config.agentBaseUrl;
+    config.agentBaseUrl = 'http://mock-agent:9999';
+    global.fetch = async () => ({
+      ok: false,
+      status: 500,
+      json: async () => ({
+        success: false,
+        error: { code: 'AGENT_INVALID_OUTPUT', message: 'Invalid output shape' },
+      }),
+    });
+
+    try {
+      await assert.rejects(
+        () => runAgent({ ticker: 'BBCA' }),
+        (err) => {
+          assert.equal(err.code, 'AGENT_INVALID_OUTPUT');
+          assert.equal(err.status, 500);
+          assert.equal(err.message, 'Invalid output shape');
+          return true;
+        }
+      );
+    } finally {
+      config.agentBaseUrl = saved;
+      global.fetch = originalFetch;
+    }
+  });
+
+  test('mempertahankan structured Sectors NOT_FOUND dari Agent', async () => {
+    const config = await importConfig();
+    const runAgent = await importRunAgent();
+    const saved = config.agentBaseUrl;
+    config.agentBaseUrl = 'http://mock-agent:9999';
+    global.fetch = async () => ({
+      ok: false,
+      status: 404,
+      json: async () => ({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Symbol not found on Sectors' },
+      }),
+    });
+
+    try {
+      await assert.rejects(
+        () => runAgent({ ticker: 'BBCA' }),
+        (err) => {
+          assert.equal(err.code, 'NOT_FOUND');
+          assert.equal(err.status, 404);
+          assert.equal(err.message, 'Symbol not found on Sectors');
+          return true;
+        }
+      );
+    } finally {
+      config.agentBaseUrl = saved;
+      global.fetch = originalFetch;
+    }
+  });
+
+  test('mempertahankan error dalam format datar dari Agent saat ini', async () => {
+    const config = await importConfig();
+    const runAgent = await importRunAgent();
+    const saved = config.agentBaseUrl;
+    config.agentBaseUrl = 'http://mock-agent:9999';
+    global.fetch = async () => ({
+      ok: false,
+      status: 500,
+      json: async () => ({
+        error: 'AGENT_INVESTIGATION_FAILED',
+        message: 'Provider request failed',
+      }),
+    });
+
+    try {
+      await assert.rejects(
+        () => runAgent({ ticker: 'BBCA' }),
+        (err) => {
+          assert.equal(err.code, 'AGENT_INVESTIGATION_FAILED');
+          assert.equal(err.status, 500);
+          assert.equal(err.message, 'Provider request failed');
+          return true;
+        }
+      );
+    } finally {
+      config.agentBaseUrl = saved;
+      global.fetch = originalFetch;
+    }
+  });
+
+  test('falls back to AGENT_REQUEST_FAILED for malformed or empty error bodies', async () => {
+    const config = await importConfig();
+    const runAgent = await importRunAgent();
+    const saved = config.agentBaseUrl;
+    config.agentBaseUrl = 'http://mock-agent:9999';
+
+    try {
+      for (const json of [
+        async () => {
+          throw new SyntaxError('Invalid JSON');
+        },
+        async () => null,
+        async () => ({ success: false, error: { code: 'UNKNOWN_CODE' } }),
+        async () => ({
+          success: false,
+          error: { code: 'UNKNOWN_CODE', message: 'Unsafe status' },
+        }),
+      ]) {
+        global.fetch = async () => ({
+          ok: false,
+          status: 418,
+          json,
+        });
+
+        await assert.rejects(
+          () => runAgent({ ticker: 'BBCA' }),
+          (err) => {
+            assert.equal(err.code, 'AGENT_REQUEST_FAILED');
+            assert.equal(err.status, 502);
+            return true;
+          }
+        );
+      }
+    } finally {
+      config.agentBaseUrl = saved;
+      global.fetch = originalFetch;
+    }
+  });
+
+  test('maps Agent network transport failures to AGENT_REQUEST_FAILED 502', async () => {
+    const config = await importConfig();
+    const runAgent = await importRunAgent();
+    const saved = config.agentBaseUrl;
+    config.agentBaseUrl = 'http://mock-agent:9999';
+    global.fetch = async () => {
+      throw new TypeError('fetch failed');
+    };
+
+    try {
+      await assert.rejects(
+        () => runAgent({ ticker: 'BBCA' }),
+        (err) => {
+          assert.equal(err.code, 'AGENT_REQUEST_FAILED');
+          assert.equal(err.status, 502);
+          return true;
+        }
+      );
+    } finally {
+      config.agentBaseUrl = saved;
+      global.fetch = originalFetch;
+    }
+  });
 });
 
 // ============================================================
@@ -197,6 +380,35 @@ describe('agent.client — AGENT_TIMEOUT', () => {
 // ============================================================
 
 describe('agent.client — happy path', () => {
+  test('throws AGENT_INVALID_RESPONSE 502 when a 200 response contains invalid JSON', async () => {
+    const config = await importConfig();
+    const runAgent = await importRunAgent();
+    const saved = config.agentBaseUrl;
+    config.agentBaseUrl = 'http://mock-agent:9999';
+    global.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new SyntaxError('Unexpected token');
+      },
+    });
+
+    try {
+      await assert.rejects(
+        () => runAgent({ ticker: 'BBCA' }),
+        (err) => {
+          assert.equal(err.code, 'AGENT_INVALID_RESPONSE');
+          assert.equal(err.status, 502);
+          assert.match(err.message, /invalid JSON/i);
+          return true;
+        }
+      );
+    } finally {
+      config.agentBaseUrl = saved;
+      global.fetch = originalFetch;
+    }
+  });
+
   test('mengembalikan JSON body ketika Agent merespons 200 OK', async () => {
     const config = await importConfig();
     const runAgent = await importRunAgent();
