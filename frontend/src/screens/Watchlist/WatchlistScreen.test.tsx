@@ -61,7 +61,7 @@ describe('WatchlistScreen', () => {
     expect(hint.compareDocumentPosition(controls) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
-  describe('hero', () => {
+    describe('hero', () => {
     const hero = () => screen.queryByRole('img', { name: 'TIDES' })
 
     it('shows when the watchlist loaded empty', async () => {
@@ -70,46 +70,44 @@ describe('WatchlistScreen', () => {
       expect(hero()).toBeInTheDocument()
     })
 
-    it('is separated from the first-ticker hint by a divider', async () => {
-      renderApp()
-      await watchlistLoaded()
-      const divider = screen.getByRole('separator')
-      const hint = screen.getByText('Add your first ticker, for example BBRI, to start scanning.')
-      expect(hero()!.compareDocumentPosition(divider) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-      expect(divider.compareDocumentPosition(hint) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    })
-
-    it('stays hidden while the watchlist is loading', async () => {
+    it('stays visible while the watchlist is loading', async () => {
       const controlled = createControlledApi({ hold: ['getWatchlist'] })
       renderApp({ api: controlled.api })
+
       expect(screen.getByRole('status')).toBeInTheDocument()
-      expect(hero()).not.toBeInTheDocument()
+      expect(hero()).toBeInTheDocument()
+
       await controlled.resolve('getWatchlist')
     })
 
-    it('stays hidden when the watchlist failed to load', async () => {
+    it('stays visible when the watchlist failed to load', async () => {
       const controlled = createControlledApi({ hold: ['getWatchlist'] })
       renderApp({ api: controlled.api })
+
       await controlled.reject('getWatchlist')
+
       expect(screen.getByRole('alert')).toBeInTheDocument()
-      expect(hero()).not.toBeInTheDocument()
+      expect(hero()).toBeInTheDocument()
     })
 
-    it('stays hidden when the watchlist has a ticker', async () => {
+    it('stays visible when the watchlist has a ticker', async () => {
       seedWatchlist(['BBRI'])
       renderApp()
       await watchlistLoaded()
-      expect(hero()).not.toBeInTheDocument()
-      expect(screen.queryByRole('separator')).not.toBeInTheDocument()
+
+      expect(hero()).toBeInTheDocument()
     })
 
-    it('disappears once the first ticker is added', async () => {
+    it('stays visible after the first ticker is added', async () => {
       const { user } = renderApp()
       await watchlistLoaded()
+
       expect(hero()).toBeInTheDocument()
+
       await user.type(tickerInput(), 'BBRI{Enter}')
+
       expect(await within(await screen.findByRole('list')).findByText('BBRI')).toBeInTheDocument()
-      expect(hero()).not.toBeInTheDocument()
+      expect(hero()).toBeInTheDocument()
     })
   })
 
