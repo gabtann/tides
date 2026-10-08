@@ -63,7 +63,19 @@ async function runAgent(input) {
       throw error;
     }
 
-    return await response.json();
+    try {
+      return await response.json();
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        const invalidResponseError = new Error(
+          "Agent service returned an invalid JSON response",
+        );
+        invalidResponseError.code = "AGENT_INVALID_RESPONSE";
+        invalidResponseError.status = 502;
+        throw invalidResponseError;
+      }
+      throw error;
+    }
   } catch (error) {
     if (error.name === "AbortError") {
       const timeoutError = new Error("Agent service request timed out");

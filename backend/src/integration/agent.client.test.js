@@ -380,6 +380,35 @@ describe('agent.client — AGENT_TIMEOUT', () => {
 // ============================================================
 
 describe('agent.client — happy path', () => {
+  test('throws AGENT_INVALID_RESPONSE 502 when a 200 response contains invalid JSON', async () => {
+    const config = await importConfig();
+    const runAgent = await importRunAgent();
+    const saved = config.agentBaseUrl;
+    config.agentBaseUrl = 'http://mock-agent:9999';
+    global.fetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => {
+        throw new SyntaxError('Unexpected token');
+      },
+    });
+
+    try {
+      await assert.rejects(
+        () => runAgent({ ticker: 'BBCA' }),
+        (err) => {
+          assert.equal(err.code, 'AGENT_INVALID_RESPONSE');
+          assert.equal(err.status, 502);
+          assert.match(err.message, /invalid JSON/i);
+          return true;
+        }
+      );
+    } finally {
+      config.agentBaseUrl = saved;
+      global.fetch = originalFetch;
+    }
+  });
+
   test('mengembalikan JSON body ketika Agent merespons 200 OK', async () => {
     const config = await importConfig();
     const runAgent = await importRunAgent();
